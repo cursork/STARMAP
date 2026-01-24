@@ -1,0 +1,3 @@
+ Z←MOON MOONPHASE SUN
+⍝ Phase of moon (0=new, 0.5=full)
+ Z←1|(MOON-SUN)÷24

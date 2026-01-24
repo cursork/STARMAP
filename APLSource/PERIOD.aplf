@@ -1,0 +1,3 @@
+ Z←PERIOD
+⍝ Selects orbital period from orbital elements
+ :If 2=≢⍴ORB ⋄ Z←ORB[;2] ⋄ :Else ⋄ Z←ORB[2] ⋄ :EndIf

@@ -1,0 +1,4 @@
+ Z←RADIUS THETA;E
+⍝ Distance from focus to point on ellipse at angle THETA
+ E←ECCENTRICITY
+ Z←SEMIMAJOR×(1-E*2)÷1+E×COS THETA

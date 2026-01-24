@@ -1,0 +1,10 @@
+ WORK
+⍝ Seven stages of calculation and printing
+⍝ Overlaps output with calculation for efficiency
+ CAPTION
+ CALCULATEPLANETS
+ REPORTPLANETS
+ CALCULATESTARS
+ PLOTSTARS
+ REPORTSTARS
+ PRINTED

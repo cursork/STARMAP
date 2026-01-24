@@ -1,0 +1,7 @@
+ H←DATE PLANETPOS ORB;E;THETA
+⍝ Finds heliocentric positions of planets for given date
+⍝ ORB contains orbital elements for planets to calculate
+ ORB←(DATE-EPOCHDATE)EPOCHADJUST ORB
+ E←ECCENTRICITY
+ THETA←E TRUEANOMALY E KEPLINVERSE 2×PI×PERIODER DATE
+ H←ORBROTATE CARTESIAN THETA,[1.5]RADIUS THETA

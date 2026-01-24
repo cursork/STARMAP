@@ -1,0 +1,3 @@
+ Z←TAN X
+⍝ Tangent function (argument in radians)
+ Z←3○X

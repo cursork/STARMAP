@@ -1,0 +1,3 @@
+ Z←SIN X
+⍝ Sine function (argument in radians)
+ Z←1○X

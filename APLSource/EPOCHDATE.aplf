@@ -1,0 +1,7 @@
+ Z←EPOCHDATE
+⍝ Selects epoch dates from orbital elements
+ :If 2=≢⍴ORB
+     Z←ORB[;10 11]
+ :Else
+     Z←ORB[10 11]
+ :EndIf

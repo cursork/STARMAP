@@ -1,0 +1,5 @@
+ Z←DIST PARALLAXADJUST AA;ALT
+⍝ Adjusts moon altitude for parallax from observer position
+ ALT←AA[;1]
+ Z←AA
+ Z[;1]←ALT-(COS RADIAN ALT)×MOONRATIO÷DIST

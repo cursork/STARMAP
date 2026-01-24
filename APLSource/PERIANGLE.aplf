@@ -1,0 +1,3 @@
+ Z←PERIANGLE
+⍝ Selects angle of perihelion from orbital elements
+ :If 2=≢⍴ORB ⋄ Z←ORB[;6] ⋄ :Else ⋄ Z←ORB[6] ⋄ :EndIf

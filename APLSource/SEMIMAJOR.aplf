@@ -1,0 +1,3 @@
+ Z←SEMIMAJOR
+⍝ Selects semimajor axis from orbital elements
+ :If 2=≢⍴ORB ⋄ Z←ORB[;1] ⋄ :Else ⋄ Z←ORB[1] ⋄ :EndIf

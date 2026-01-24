@@ -1,0 +1,12 @@
+ Z←JNU DATE;M;D;Y;A;B
+⍝ Converts calendar date to Julian day number
+⍝ DATE is M D Y (month day year)
+ M D Y←DATE
+ →(M>2)/CALC
+ M←M+12
+ Y←Y-1
+CALC:A←⌊Y÷100
+ B←2-A+⌊A÷4
+ Z←⌊365.25×Y+4716
+ Z←Z+⌊30.6001×M+1
+ Z←Z+D+B-1524.5

@@ -1,0 +1,3 @@
+ Z←COALTITUDE X
+⍝ Coaltitude: 90 minus altitude, in radians
+ Z←RADIAN 90-X

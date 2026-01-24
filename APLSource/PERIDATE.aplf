@@ -1,0 +1,3 @@
+ Z←PERIDATE
+⍝ Computes date of perihelion from tabled elements
+ Z←ANOMALYDATE-PERIOD×ANOMALY÷360

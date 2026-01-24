@@ -1,0 +1,4 @@
+ Z←BRIGHT
+⍝ Logical vector: 1 for stars of magnitude 1.5 or brighter
+⍝ Corresponds to entries in STARS matrix
+ Z←50⍴1 1 1 1 1 0 1 0 0 0 0 0 0 0 0 1 0 0 1 1 1 1 0 0 1 1 1 0 0 0 1 0 1 0 0 0 1 0 0 1 1 1 1 1 1 0 0 0 0 0

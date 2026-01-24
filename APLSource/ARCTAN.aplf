@@ -1,0 +1,3 @@
+ Z←ARCTAN X
+⍝ Arctangent function (result in radians)
+ Z←¯3○X

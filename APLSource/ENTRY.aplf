@@ -1,0 +1,9 @@
+ ENTRY
+⍝ Establishes input parameters by calling GETDATE, GETTIME, GETLAT, GETLONG
+⍝ Adjusts date and time for indicated longitude
+ STATEDDAYNO←GETDATE
+ STATEDTIME←GETTIME
+ LAT←GETLAT
+ LONG←GETLONG
+ TIME←LONG TIMEADJUST STATEDTIME
+ DATE←STATEDDAYNO+(TIME÷24)-LONG÷360

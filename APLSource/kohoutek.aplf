@@ -1,0 +1,5 @@
+ Z←kohoutek
+⍝ Orbital elements for Comet Kohoutek (parabolic orbit)
+⍝ PERIDIST, INCLINATION, ASCENDING, PERIANGLE, PERIDATE (as Julian day)
+⍝ Note: ANOMALYDATE stores PERIDATE for comets
+ Z←1 11⍴0.142 0 0 14.2969 257.7153 295.5891 0 0 0 2442046.463 2442046.463

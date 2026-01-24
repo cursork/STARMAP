@@ -1,0 +1,3 @@
+ Z←INCLINATION
+⍝ Selects inclination from orbital elements
+ :If 2=≢⍴ORB ⋄ Z←ORB[;4] ⋄ :Else ⋄ Z←ORB[4] ⋄ :EndIf

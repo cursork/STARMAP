@@ -1,0 +1,3 @@
+ Z←PERIDIST
+⍝ Selects perihelion distance (for comets)
+ :If 2=≢⍴ORB ⋄ Z←ORB[;1] ⋄ :Else ⋄ Z←ORB[1] ⋄ :EndIf

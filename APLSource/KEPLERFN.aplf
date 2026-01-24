@@ -1,0 +1,3 @@
+ TIME←E KEPLERFN PSI
+⍝ Kepler's function: time as function of eccentric anomaly PSI
+ TIME←PSI-E×SIN PSI

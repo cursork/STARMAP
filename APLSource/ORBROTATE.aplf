@@ -1,0 +1,12 @@
+ H←ORBROTATE X;INCL;I;OMEGA;O;OMEG4;Q
+⍝ Converts 2D orbital plane coordinates to 3D heliocentric
+⍝ Accounts for orientation and tilt of each orbit
+ X←((⍴X),1)⍴X←1 0 1\X
+ OMEGA←RADIAN PERIANGLE-ASCENDING
+ OMEG4←RADIAN ASCENDING
+ INCL←RADIAN INCLINATION
+ I←INCLROTATE INCL
+ O←LONGROTATE OMEGA
+ Q←LONGROTATE OMEG4
+ H←(Q TIMES I TIMES O)TIMES X
+ H←((1↓⍴H),×/1↑⍴H)⍴H

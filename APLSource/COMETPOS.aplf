@@ -1,0 +1,7 @@
+ H←DATE COMETPOS ORB;X
+⍝ Position of comet in heliocentric coordinates
+⍝ Uses parabolic orbit calculations
+ H←0 3⍴0
+ →0 IF 0=⍴,DATE
+ X←COMETSOLVE(PI×SQRT 2×PERIDIST)×(DATE-ANOMALYDATE)÷TROPYR
+ H←ORBROTATE(PARABOLA X),-X

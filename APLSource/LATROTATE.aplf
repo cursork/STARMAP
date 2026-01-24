@@ -1,0 +1,4 @@
+ Z←LATROTATE LAT
+⍝ Generates rotation matrix for latitude
+⍝ Related to inclination rotation by axis swap
+ Z←⊖⊖INCLROTATE LAT

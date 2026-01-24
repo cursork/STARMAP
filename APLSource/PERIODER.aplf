@@ -1,0 +1,3 @@
+ Z←PERIODER DATE
+⍝ Fraction of orbital period elapsed since last perihelion
+ Z←1|(ANOMALY÷360)+(DATE-ANOMALYDATE)÷PERIOD×TROPYR

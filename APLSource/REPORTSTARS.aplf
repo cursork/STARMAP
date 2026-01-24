@@ -1,0 +1,4 @@
+ REPORTSTARS
+⍝ Prints table of bright visible stars with positions
+ ⎕←'Bright Stars Visible:'
+ ⎕←AAE

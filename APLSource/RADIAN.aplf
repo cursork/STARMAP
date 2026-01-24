@@ -1,0 +1,3 @@
+ Z←RADIAN X
+⍝ Converts degrees to radians
+ Z←X×○1÷180

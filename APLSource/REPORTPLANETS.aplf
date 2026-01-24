@@ -1,0 +1,5 @@
+ REPORTPLANETS
+⍝ Prints table of planet positions (RA, Dec, Alt, Az)
+ ⎕←'Planet Positions:'
+ ⎕←'RA(h)  Dec(°)  Alt(°)  Az(°)'
+ ⎕←PLANETS

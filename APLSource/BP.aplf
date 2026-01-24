@@ -1,0 +1,4 @@
+ Z←BP
+⍝ Logical vector: which planets are usually magnitude 1.5 or brighter
+⍝ Mercury, Venus, Mars, Jupiter, Saturn visible; Uranus, Neptune, Pluto not
+ Z←1 1 0 1 1 1 0 0 0

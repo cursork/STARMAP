@@ -1,0 +1,3 @@
+ Z←AREA X
+⍝ Area swept by comet as function of distance from axis
+ Z←(PERIDIST×X÷2)+(X*3)÷4×PERIDIST

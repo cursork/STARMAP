@@ -1,0 +1,5 @@
+ Z←CARTESIAN POLAR;RHO;THETA
+⍝ Converts polar to Cartesian coordinates
+ THETA←POLAR[;1]
+ RHO←POLAR[;2]
+ Z←(RHO×COS THETA),[1.5]-RHO×SIN THETA

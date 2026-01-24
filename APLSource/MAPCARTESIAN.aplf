@@ -1,0 +1,4 @@
+ Z←MAPCARTESIAN X
+⍝ Converts projected polar to Cartesian for plotting
+⍝ Adjusts for alt/az vs RA/Dec ordering convention
+ Z←⊖CARTESIAN⊖X

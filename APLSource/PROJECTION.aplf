@@ -1,0 +1,4 @@
+ Z←PROJECTION X
+⍝ Projects sky onto flat surface (stereographic)
+⍝ Condensed at zenith, expanded at horizon
+ Z←(TAN 0.5×COALTITUDE X[;1]),[1.5]RADIAN X[;2]

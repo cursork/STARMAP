@@ -1,0 +1,4 @@
+ Z←X IF Y
+⍝ Compression helper: returns Y/X
+⍝ "X IF Y" reads as "X if Y is true"
+ Z←Y/X

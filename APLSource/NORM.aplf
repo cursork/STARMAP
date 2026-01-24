@@ -1,0 +1,3 @@
+ Z←NORM X
+⍝ Euclidean norm (square root of sum of squares)
+ Z←(X+.*2)*0.5

@@ -1,0 +1,6 @@
+ PLOTSTARS
+⍝ Plots visible stars and planets on map
+⍝ TODO: Implement plotting using FPLOT or modern alternative
+ ⎕←'[Star map would be plotted here]'
+ ⎕←'Visible stars: ',⍕+/VE
+ ⎕←'Visible planets: ',⍕+/VP

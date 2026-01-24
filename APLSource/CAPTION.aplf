@@ -1,0 +1,8 @@
+ CAPTION
+⍝ Prints caption with input parameters and day of week
+ ⎕←'STARMAP'
+ ⎕←'Date: ',⍕STATEDDAYNO
+ ⎕←'Time: ',⍕STATEDTIME
+ ⎕←'Latitude: ',⍕LAT
+ ⎕←'Longitude: ',⍕LONG
+ ⎕←'Day of week: ',⍕7|STATEDDAYNO

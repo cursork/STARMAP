@@ -1,0 +1,4 @@
+ Z←LONG TIMEADJUST TIME
+⍝ Adjusts stated time for longitude to get true local time
+⍝ TIME is in hours, LONG in degrees east
+ Z←TIME+LONG÷15

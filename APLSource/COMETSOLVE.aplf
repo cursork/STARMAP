@@ -1,0 +1,6 @@
+ X←COMETSOLVE TIME;ERROR
+⍝ Inverse of AREA function using Newton's method
+ X←2×TIME÷PERIDIST
+TEST:→0 IF 1E¯8>|ERROR←TIME-AREA X
+ X←X+ERROR÷AREADERIV X
+ →TEST

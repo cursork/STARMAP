@@ -1,0 +1,4 @@
+ PRINTED
+⍝ Final output - labels map with user name and print time
+ ⎕←''
+ ⎕←'Map generated at: ',⍕⎕TS

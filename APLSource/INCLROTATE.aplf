@@ -1,0 +1,8 @@
+ Z←INCLROTATE INCL;RHO
+⍝ Generates rotation matrix for inclination angle
+ RHO←⍴INCL
+ Z←((⍴,INCL),3 3)⍴9↑1
+ Z[;2;2]←Z[;3;3]←COS INCL
+ Z[;2;3]←-Z[;3;2]←SIN INCL
+ →(0<⍴RHO)/0
+ Z←3 3⍴Z

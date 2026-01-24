@@ -1,0 +1,9 @@
+ Z←COL RADECDIST GQ;DIST
+⍝ Converts Cartesian to polar (RA hours, Dec degrees, distance)
+⍝ COL=2 for RA,Dec only; COL=3 includes distance
+ Z←ARCCOS GQ[;1]÷(GQ[;1 3]+.*2)*0.5
+ Z←(12÷PI)×Z+(GQ[;3]>0)×2×PI-Z
+ DIST←(GQ+.*2)*0.5
+ Z←Z,[1.5](180÷PI)×ARCSIN GQ[;2]÷DIST
+ →0 IF COL<3
+ Z←Z,DIST

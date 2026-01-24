@@ -1,0 +1,3 @@
+ THETA←E TRUEANOMALY PSI
+⍝ Converts eccentric anomaly PSI to true anomaly THETA
+ THETA←(2×PI)|2×ARCTAN(SQRT(1+E)÷1-E)×TAN PSI÷2

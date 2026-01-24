@@ -1,0 +1,3 @@
+ Z←ANOMALY
+⍝ Selects mean anomaly from orbital elements
+ :If 2=≢⍴ORB ⋄ Z←ORB[;7] ⋄ :Else ⋄ Z←ORB[7] ⋄ :EndIf

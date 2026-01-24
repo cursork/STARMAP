@@ -1,0 +1,3 @@
+ Z←SECULAR
+⍝ Selects secular adjustment rates from orbital elements
+ :If 2=≢⍴ORB ⋄ Z←ORB[;8 9] ⋄ :Else ⋄ Z←ORB[8 9] ⋄ :EndIf
