@@ -9,4 +9,4 @@
  O←LONGROTATE OMEGA
  Q←LONGROTATE OMEG4
  H←(Q TIMES I TIMES O)TIMES X
- H←((1↓⍴H),×/1↑⍴H)⍴H
+ H←(¯1↓⍴H)⍴H
