@@ -204,6 +204,75 @@ Also fixed logic: original `BRIGHT/⍨VE` compresses BRIGHT by VE, giving fewer 
 
 ---
 
+### 8. MAPCARTESIAN.aplf (Line 4)
+
+**Problem:** `⊖` (reverse first axis) used where `⌽` (reverse last axis) was needed, likely a transcription error from the 1978 printed book where the two glyphs are easily confused.
+
+**Original (incorrect):**
+```apl
+Z←⊖CARTESIAN⊖X
+```
+
+**Fixed:**
+```apl
+Z←⌽CARTESIAN⌽X
+```
+
+**Explanation:** PROJECTION outputs an N×2 matrix of `[radius, azimuth]`. CARTESIAN expects `[theta, rho]` — columns swapped. The book itself says (p.545): *"MAPCARTESIAN makes allowance for the fact that altitude and azimuth are conventionally grouped in the opposite order from right ascension and declination"* — i.e., a column swap.
+
+`⊖` reverses rows (first axis), so `⊖CARTESIAN⊖X` reverses rows, applies CARTESIAN, reverses rows back — the two operations cancel, producing `CARTESIAN X` with radius used as angle and azimuth as magnitude. This yields coordinates far outside [-1, 1].
+
+`⌽` reverses columns (last axis), so `⌽CARTESIAN⌽X` swaps [radius, azimuth] to [azimuth, radius], applies CARTESIAN correctly, then swaps columns back. Result: x = -ρ sin(az), y = ρ cos(az) — proper stereographic Cartesian within the unit circle.
+
+---
+
+### 9. DISPLAY.aplf (Lines 5-6)
+
+**Problem:** `⍞` prompt for IBM plotter blocked execution via RIDE/gritt.
+
+**Original:**
+```apl
+ENTRY
+⎕←'Insert fine plotting element and press ENTER'
+⍞
+WORK
+```
+
+**Fixed:**
+```apl
+ENTRY
+WORK
+```
+
+**Explanation:** The "fine plotting element" was a physical pen tip inserted into an IBM pen plotter (IBM program 5798-AGL). The `⍞` paused execution until the operator confirmed the plotter was ready. Since there is no plotter, this prompt is removed. The `⍞` also caused NONCE ERROR when executing via RIDE sockets.
+
+---
+
+### 10. PLOTSTARS.aplf (Complete rewrite)
+
+**Problem:** Original PLOTSTARS called FPLOT, an external IBM fine-plotting function not included in the book.
+
+**Fix:** Replaced with ASCII art renderer producing a 41×79 character grid:
+- Horizon circle drawn with `·` characters
+- Cardinal directions (N/S/E/W) — East on left, West on right (standard sky chart convention: looking up)
+- Zenith marked with `+` at center
+- Stars: `.` for faint, `*` for bright (magnitude ≤ 1.5)
+- Planets: numbered symbols (O=Moon, @=Sun, 1-9=Mercury–Pluto, K=Kohoutek)
+- Legend printed below map
+
+Uses existing globals STARCOORD, PLANETCOORD, VE, VP, BRIGHT, PHASE set by CALCULATEPLANETS and CALCULATESTARS.
+
+---
+
+### New files added
+
+| File | Purpose |
+|------|---------|
+| PLANETNAMES.aplf | 12-element nested vector of planet/object names matching CALCULATEPLANETS order |
+| STARNAMES.aplf | 50-element nested vector of star names from book appendix (p.693+) |
+
+---
+
 ## Current Status
 
 ### Working:
@@ -216,16 +285,15 @@ Also fixed logic: original `BRIGHT/⍨VE` compresses BRIGHT by VE, giving fewer 
 - **CALCULATEPLANETS** - Full planet calculation pipeline
 - **CALCULATESTARS** - Full star calculation pipeline
 - **WORK** - Main calculation orchestration
+- **DISPLAY** - Full pipeline: interactive input → calculations → ASCII star map
+- **PLOTSTARS** - ASCII art star map with horizon circle, cardinal directions, star/planet symbols
+- **MAPCARTESIAN** - Stereographic projection to Cartesian (⌽ fix)
+- **PRINTED** - End-of-job timestamp
 
 ### Partially Working:
 - **CAPTION** - Works but shows latitude in radians (should be degrees)
 - **REPORTPLANETS** - Works but formatting could be improved
-
-### Not Tested:
-- **DISPLAY** - Requires interactive input via ⎕
-- **PLOTSTARS** - Requires FPLOT (external plotting function)
-- **REPORTSTARS** - Depends on PLOTSTARS output
-- **PRINTED** - Output formatting
+- **REPORTSTARS** - Works but just dumps raw AAE matrix
 
 ---
 
@@ -386,8 +454,16 @@ CALCULATESTARS
 | SKYPOS.aplf | 3 | Syntax + shapes |
 | CALCULATEPLANETS.aplf | 2 | Column selection |
 | CALCULATESTARS.aplf | 4 | Function/variable conflict |
+| MAPCARTESIAN.aplf | 1 | ⊖ vs ⌽ transcription error |
+| DISPLAY.aplf | 2 removed | Removed ⍞ plotter prompt |
+| PLOTSTARS.aplf | full rewrite | ASCII art replaces FPLOT stub |
 
-**Total: 7 files, 13 line changes**
+## Files Added
+
+| File | Purpose |
+|------|---------|
+| PLANETNAMES.aplf | Planet/object name data |
+| STARNAMES.aplf | Star name data (from book appendix) |
 
 ---
 
@@ -395,4 +471,4 @@ CALCULATESTARS
 
 Original STARMAP by Paul C. Berry and John R. Thorstensen, IBM Corporation, 1973.
 
-Modernization work performed January 2026.
+Modernization work performed January–February 2026.
