@@ -1,4 +1,8 @@
  Z←MAPCARTESIAN X
 ⍝ Converts projected polar to Cartesian for plotting
-⍝ Adjusts for alt/az vs RA/Dec ordering convention
- Z←⊖CARTESIAN⊖X
+⍝ Swaps column order: PROJECTION gives (radius,azimuth),
+⍝ CARTESIAN expects (theta,rho). Book p.545: "makes allowance
+⍝ for the fact that altitude and azimuth are conventionally
+⍝ grouped in the opposite order from right ascension and declination"
+⍝ Original used ⊖ (reverse rows) but context requires ⌽ (reverse cols)
+ Z←⌽CARTESIAN⌽X

@@ -1,0 +1,4 @@
+ Z←PLANETNAMES
+⍝ Names of objects in PLANETS matrix order (set by CALCULATEPLANETS)
+⍝ Moon, Sun, 9 planets (Mercury-Pluto), Kohoutek comet
+ Z←'Moon' 'Sun' 'Mercury' 'Venus' 'Earth' 'Mars' 'Jupiter' 'Saturn' 'Uranus' 'Neptune' 'Pluto' 'Kohoutek'

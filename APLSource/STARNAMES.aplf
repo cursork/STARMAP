@@ -1,0 +1,13 @@
+ Z←STARNAMES
+⍝ Names for the 50 stars in STARS catalog, from book appendix (p.693+)
+⍝ Popular names where available, Bayer designations otherwise
+ Z←'Alpheratz' 'Mirach' 'Almach' 'dAnd'
+ Z,←'Altair' 'bAql' 'gAql' 'dAql' 'zAql' 'etAql' 'thAql' 'lAql'
+ Z,←'aAqr' 'bAqr' 'dAqr'
+ Z,←'bAra' 'gAra' 'zAra'
+ Z,←'aAri' 'Sheratan'
+ Z,←'Capella' 'Menkalinan' 'dAur' 'eAur' 'thAur' 'iAur'
+ Z,←'Arcturus' 'bBoo' 'gBoo' 'dBoo' 'eBoo' 'zBoo' 'etBoo' 'rBoo'
+ Z,←'aCap' 'bCap' 'dCap' 'thCap' 'wCap'
+ Z,←'Canopus' 'Miaplacidus' 'eCar' 'etCar' 'thCar' 'iCar' 'uCar' 'xCar' 'wCar' 'ppCar'
+ Z,←'Schedir'

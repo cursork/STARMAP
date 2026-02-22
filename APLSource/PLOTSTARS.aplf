@@ -1,6 +1,66 @@
- PLOTSTARS
-⍝ Plots visible stars and planets on map
-⍝ TODO: Implement plotting using FPLOT or modern alternative
- ⎕←'[Star map would be plotted here]'
- ⎕←'Visible stars: ',⍕+/VE
- ⎕←'Visible planets: ',⍕+/VP
+ PLOTSTARS;GRID;ROWS;COLS;CR;CC;RR;RC;A;HR;HC;IDX;I;R;C;BVIS;PCHARS;VPCHARS;N;VPNAMES;L
+⍝ ASCII star map - stereographic projection centered on zenith
+⍝ North at top, East at left (looking up at sky)
+⍝ Uses globals: STARCOORD, PLANETCOORD, VE, VP, BRIGHT, PHASE
+ ROWS←41 ⋄ COLS←79
+ CR←1+⌊ROWS÷2 ⋄ CC←1+⌊COLS÷2
+ RR←(ROWS-3)÷2 ⋄ RC←(COLS-3)÷2
+ GRID←ROWS COLS⍴' '
+ ⍝
+ ⍝ --- Horizon circle (360 points) ---
+ A←(⍳360)×(○2)÷360
+ HR←⌊0.5+CR-RR×2○A
+ HC←⌊0.5+CC+RC×1○A
+ HR←1⌈ROWS⌊HR ⋄ HC←1⌈COLS⌊HC
+ IDX←∪((HR-1)×COLS)+HC
+ (,GRID)[IDX]←'·'
+ ⍝
+ ⍝ --- Cardinal directions ---
+ GRID[CR-RR-1;CC]←'N'
+ GRID[CR+RR+1;CC]←'S'
+ GRID[CR;CC-RC-1]←'E'
+ GRID[CR;CC+RC+1]←'W'
+ ⍝
+ ⍝ --- Zenith marker ---
+ GRID[CR;CC]←'+'
+ ⍝
+ ⍝ --- Plot stars ---
+ :If 2=⍴⍴STARCOORD
+   BVIS←VE/BRIGHT
+   :For I :In ⍳⊃⍴STARCOORD
+     R←⌊0.5+CR-RR×STARCOORD[I;2]
+     C←⌊0.5+CC+RC×STARCOORD[I;1]
+     :If (R≥1)∧(R≤ROWS)∧(C≥1)∧(C≤COLS)
+       :If GRID[R;C]=' '
+         GRID[R;C]←'.*'[1+BVIS[I]]
+       :EndIf
+     :EndIf
+   :EndFor
+ :EndIf
+ ⍝
+ ⍝ --- Plot planets (overwrite if overlapping) ---
+ PCHARS←(≢VP)↑'O@123456789K'
+ VPCHARS←VP/PCHARS
+ :If 2=⍴⍴PLANETCOORD
+   :For I :In ⍳⊃⍴PLANETCOORD
+     R←⌊0.5+CR-RR×PLANETCOORD[I;2]
+     C←⌊0.5+CC+RC×PLANETCOORD[I;1]
+     :If (R≥1)∧(R≤ROWS)∧(C≥1)∧(C≤COLS)
+       GRID[R;C]←VPCHARS[I]
+     :EndIf
+   :EndFor
+ :EndIf
+ ⍝
+ ⍝ --- Output ---
+ ⎕←GRID
+ ⎕←''
+ ⎕←'  * bright star   . star   + zenith   · horizon'
+ :If ∨/VP
+   N←(≢VP)↑PLANETNAMES
+   VPNAMES←VP/N
+   L←' '
+   :For I :In ⍳≢VPCHARS
+     L←L,' ',VPCHARS[I],'=',⊃VPNAMES[I]
+   :EndFor
+   ⎕←L
+ :EndIf
