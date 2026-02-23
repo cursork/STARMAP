@@ -3,6 +3,7 @@
 *.gz
 
 scrap/
+.venv/
 
 # Yale Bright Star Catalog contents
 yale-catalog/bsc5.html

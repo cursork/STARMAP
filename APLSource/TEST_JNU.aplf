@@ -1,0 +1,19 @@
+ R←TEST_JNU;CASES;I;C;D;EXP;GOT
+⍝ Test JNU: calendar date → Julian day number
+⍝ Reference values from Meeus, "Astronomical Algorithms"
+ R←1
+ ⍝ (M D Y) expected-JD
+ CASES←((1 1 2000) 2451544.5)((5 16 1974) 2442183.5)((7 4 1776) 2369915.5)((1 1 1900) 2415020.5)((3 21 1973) 2441762.5)
+ :For I :In ⍳≢CASES
+   C←I⊃CASES
+   D←1⊃C
+   EXP←2⊃C
+   GOT←JNU D
+   :If EXP≠GOT
+     ⎕←'FAIL: JNU ',(⍕D),' expected ',(⍕EXP),' got ',(⍕GOT)
+     R←0
+   :EndIf
+ :EndFor
+ :If R
+   ⎕←'PASS: JNU (',(⍕≢CASES),' dates)'
+ :EndIf

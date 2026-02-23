@@ -1,0 +1,8 @@
+ Z←DAYNAME JDN;M;D;Y;T;W
+⍝ Day-of-week name from Julian day number
+⍝ Converts to calendar date via JNUINV, then uses Sakamoto's algorithm
+ M D Y←JNUINV JDN
+ Y←Y-M<3
+ T←0 3 2 5 0 3 5 1 4 6 2 4
+ W←7|(⌊Y÷400)+(⌊Y÷4)+Y+T[M]+D-⌊Y÷100
+ Z←(1+W)⊃'SUNDAY' 'MONDAY' 'TUESDAY' 'WEDNESDAY' 'THURSDAY' 'FRIDAY' 'SATURDAY'

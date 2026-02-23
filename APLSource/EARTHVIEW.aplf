@@ -1,5 +1,4 @@
  GQ←DATE EARTHVIEW H;GC
 ⍝ Converts heliocentric to geocentric equatorial coordinates
- H←(1,⍴H)⍴⍣(1=≢⍴H)⊢H ⍝ Ensure matrix
  GC←H-(⍴H)⍴DATE PLANETPOS EARTH
  GQ←3 RADECDIST GC+.×INCLROTATE-RADIAN AXITILT

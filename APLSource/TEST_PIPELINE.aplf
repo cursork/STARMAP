@@ -1,0 +1,94 @@
+ R←TEST_PIPELINE;TOL;PLANET_REF;PERR;MAXPERR
+⍝ Test CALCULATESTARS and CALCULATEPLANETS end-to-end
+⍝ Observation: 1974-05-16 05:00 UTC, Anaheim CA (33.767N, 117.833W)
+⍝ Verifies globals are set correctly and shapes are consistent
+ R←1
+ TOL←0.5 ⍝ degrees
+
+⍝ Set observation parameters
+ STATEDDAYNO←JNU 5 16 1974
+ STATEDTIME←5
+ LONG←¯117.833
+ LAT←33.767
+ TIME←LONG TIMEADJUST STATEDTIME
+ DATE←STATEDDAYNO+(TIME÷24)-LONG÷360
+
+⍝ === CALCULATESTARS ===
+ CALCULATESTARS
+
+⍝ VE: boolean, length = star count
+ :If 332≠≢VE
+   ⎕←'FAIL: VE length ',(⍕≢VE),' expected 332'
+   R←0
+ :EndIf
+
+⍝ 166 visible, 9 bright-and-visible
+ :If 166≠+/VE
+   ⎕←'FAIL: visible stars ',(⍕+/VE),' expected 166'
+   R←0
+ :EndIf
+
+ :If 9≠+/BRIGHTVIS
+   ⎕←'FAIL: bright visible ',(⍕+/BRIGHTVIS),' expected 9'
+   R←0
+ :EndIf
+
+⍝ AAE: bright-and-visible stars (alt/az)
+ :If (9 2)≢⍴AAE
+   ⎕←'FAIL: AAE shape ',(⍕⍴AAE),' expected 9 2'
+   R←0
+ :EndIf
+
+⍝ STARCOORD: visible stars (map coordinates)
+ :If (166 2)≢⍴STARCOORD
+   ⎕←'FAIL: STARCOORD shape ',(⍕⍴STARCOORD),' expected 166 2'
+   R←0
+ :EndIf
+
+⍝ === CALCULATEPLANETS ===
+ CALCULATEPLANETS
+
+⍝ PLANETS: Moon + Sun + 8 planets + Kohoutek = 11 rows, 3 cols (RA, Dec, dist)
+ :If 3≠1↑⌽⍴PLANETS
+   ⎕←'FAIL: PLANETS cols ',(⍕1↑⌽⍴PLANETS),' expected 3'
+   R←0
+ :EndIf
+
+⍝ VP: boolean, one per body in AA
+ :If (+/VP)<1
+   ⎕←'FAIL: no visible planets'
+   R←0
+ :EndIf
+
+⍝ PHASE: scalar between 0 and 1
+ :If ~(0≤PHASE)∧(PHASE≤1)
+   ⎕←'FAIL: PHASE ',(⍕PHASE),' outside 0..1'
+   R←0
+ :EndIf
+
+⍝ Reference alt/az for 4 visible planets: Mars, Saturn, Uranus, Pluto
+ PLANET_REF←4 2⍴0
+ PLANET_REF[1;]←16.75 288.02  ⍝ Mars
+ PLANET_REF[2;]← 6.66 293.00  ⍝ Saturn
+ PLANET_REF[3;]←48.10 169.26  ⍝ Uranus
+ PLANET_REF[4;]←70.28 186.79  ⍝ Pluto
+
+⍝ AAE contains only visible planets — check values
+ PERR←|AAE-PLANET_REF
+ PERR[;2]←PERR[;2]⌊360-PERR[;2]
+ MAXPERR←⌈/⌈/PERR
+
+ :If MAXPERR>TOL
+   ⎕←'FAIL: planet alt/az max error ',(⍕MAXPERR),'deg (tolerance ',(⍕TOL),'deg)'
+   R←0
+ :EndIf
+
+⍝ PLANETCOORD: same number of rows as visible planets
+ :If (⊃⍴PLANETCOORD)≠+/VP
+   ⎕←'FAIL: PLANETCOORD rows ',(⍕⊃⍴PLANETCOORD),' vs VP count ',(⍕+/VP)
+   R←0
+ :EndIf
+
+ :If R
+   ⎕←'PASS: TEST_PIPELINE (stars: ',(⍕+/VE),' visible, ',(⍕+/BRIGHTVIS),' bright; planets: ',(⍕+/VP),' visible, max error ',(⍕MAXPERR),'deg)'
+ :EndIf

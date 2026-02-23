@@ -1,0 +1,19 @@
+ R←TEST_DAYNAME;CASES;I;C;D;EXP;GOT
+⍝ Test DAYNAME: Julian day number → day-of-week name
+⍝ Known days verified against external calendars
+ R←1
+ ⍝ (M D Y) expected-day-name
+ CASES←((1 14 1974) 'MONDAY')((5 15 1974) 'WEDNESDAY')((1 1 2000) 'SATURDAY')((7 4 1776) 'THURSDAY')((7 20 1969) 'SUNDAY')((11 9 1989) 'THURSDAY')((2 29 2000) 'TUESDAY')
+ :For I :In ⍳≢CASES
+   C←I⊃CASES
+   D←JNU 1⊃C
+   EXP←2⊃C
+   GOT←DAYNAME D
+   :If EXP≢GOT
+     ⎕←'FAIL: DAYNAME for ',(⍕1⊃C),' expected "',EXP,'" got "',GOT,'"'
+     R←0
+   :EndIf
+ :EndFor
+ :If R
+   ⎕←'PASS: DAYNAME (',(⍕≢CASES),' dates)'
+ :EndIf

@@ -1,0 +1,121 @@
+ R←TEST_STARCATALOG;TOL;NB
+⍝ Test star catalog: shapes, ranges, spot-checks, bright count, names
+ R←1
+⍝ --- Shape tests ---
+ :If (332 2)≢⍴STARS
+   ⎕←'FAIL: STARS shape expected 332 2, got ',⍕⍴STARS
+   R←0
+ :EndIf
+ :If 332≠≢STARNAMES
+   ⎕←'FAIL: STARNAMES count expected 332, got ',⍕≢STARNAMES
+   R←0
+ :EndIf
+ :If 332≠≢BRIGHT
+   ⎕←'FAIL: BRIGHT count expected 332, got ',⍕≢BRIGHT
+   R←0
+ :EndIf
+⍝ --- RA range: 0 to 24 ---
+ :If ∨/STARS[;1]<0
+   ⎕←'FAIL: RA has negative values'
+   R←0
+ :EndIf
+ :If ∨/STARS[;1]>24
+   ⎕←'FAIL: RA exceeds 24'
+   R←0
+ :EndIf
+⍝ --- Dec range: ¯90 to 90 ---
+ :If ∨/STARS[;2]<¯90
+   ⎕←'FAIL: Dec below ¯90'
+   R←0
+ :EndIf
+ :If ∨/STARS[;2]>90
+   ⎕←'FAIL: Dec exceeds 90'
+   R←0
+ :EndIf
+⍝ --- BRIGHT is boolean ---
+ :If ~∧/BRIGHT∊0 1
+   ⎕←'FAIL: BRIGHT contains non-boolean values'
+   R←0
+ :EndIf
+⍝ --- Spot checks (tolerance 0.01) ---
+ TOL←0.01
+⍝ Alpheratz (row 1): RA=0h08m23s Dec=29d05m
+ :If TOL<|STARS[1;1]-0.1397
+   ⎕←'FAIL: Alpheratz RA expected ~0.1397, got ',⍕STARS[1;1]
+   R←0
+ :EndIf
+ :If TOL<|STARS[1;2]-29.0833
+   ⎕←'FAIL: Alpheratz Dec expected ~29.0833, got ',⍕STARS[1;2]
+   R←0
+ :EndIf
+⍝ Altair (row 5): RA=19h50m47s Dec=8d52m
+ :If TOL<|STARS[5;1]-19.8464
+   ⎕←'FAIL: Altair RA expected ~19.8464, got ',⍕STARS[5;1]
+   R←0
+ :EndIf
+ :If TOL<|STARS[5;2]-8.8667
+   ⎕←'FAIL: Altair Dec expected ~8.8667, got ',⍕STARS[5;2]
+   R←0
+ :EndIf
+⍝ Sirius (row 81): RA=6h45m09s Dec=¯16d42m BRIGHT=1
+ :If TOL<|STARS[81;1]-6.7525
+   ⎕←'FAIL: Sirius RA expected ~6.7525, got ',⍕STARS[81;1]
+   R←0
+ :EndIf
+ :If TOL<|STARS[81;2]-¯16.7
+   ⎕←'FAIL: Sirius Dec expected ~¯16.7, got ',⍕STARS[81;2]
+   R←0
+ :EndIf
+ :If 1≠BRIGHT[81]
+   ⎕←'FAIL: Sirius should be BRIGHT'
+   R←0
+ :EndIf
+⍝ Polaris (row 315): RA=2h31m49s Dec=89d15m
+ :If TOL<|STARS[315;1]-2.5303
+   ⎕←'FAIL: Polaris RA expected ~2.5303, got ',⍕STARS[315;1]
+   R←0
+ :EndIf
+ :If TOL<|STARS[315;2]-89.25
+   ⎕←'FAIL: Polaris Dec expected ~89.25, got ',⍕STARS[315;2]
+   R←0
+ :EndIf
+⍝ Edge case: ¯0 degrees — theta Aql (row 11) Dec=¯0d49m → ¯0.8167
+ :If TOL<|STARS[11;2]-¯0.8167
+   ⎕←'FAIL: thAql Dec expected ~¯0.8167, got ',⍕STARS[11;2]
+   R←0
+ :EndIf
+⍝ --- Bright count: expect 22 (mag ≤ 1.5) ---
+ NB←+/BRIGHT
+ :If NB≠22
+   ⎕←'FAIL: expected 22 bright stars, got ',⍕NB
+   R←0
+ :EndIf
+⍝ --- Name checks ---
+ :If 'Alpheratz'≢1⊃STARNAMES
+   ⎕←'FAIL: star 1 name expected Alpheratz, got ',1⊃STARNAMES
+   R←0
+ :EndIf
+ :If 'dAnd'≢4⊃STARNAMES
+   ⎕←'FAIL: star 4 name expected dAnd, got ',4⊃STARNAMES
+   R←0
+ :EndIf
+ :If 'Sirius'≢81⊃STARNAMES
+   ⎕←'FAIL: star 81 name expected Sirius, got ',81⊃STARNAMES
+   R←0
+ :EndIf
+ :If 'Vega'≢202⊃STARNAMES
+   ⎕←'FAIL: star 202 name expected Vega, got ',202⊃STARNAMES
+   R←0
+ :EndIf
+ :If 'Mizar'≢305⊃STARNAMES
+   ⎕←'FAIL: star 305 name expected Mizar, got ',305⊃STARNAMES
+   R←0
+ :EndIf
+ :If 'Polaris'≢315⊃STARNAMES
+   ⎕←'FAIL: star 315 name expected Polaris, got ',315⊃STARNAMES
+   R←0
+ :EndIf
+⍝ --- Done ---
+ :If R
+   ⎕←'PASS: TEST_STARCATALOG (shapes, ranges, spots, bright, names)'
+ :EndIf

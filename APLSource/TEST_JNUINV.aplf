@@ -1,0 +1,16 @@
+ R←TEST_JNUINV;DATES;I;D;RT
+⍝ Test JNUINV: Julian day number → M D Y (inverse of JNU)
+⍝ Strategy: round-trip — JNUINV JNU date should return original date
+ R←1
+ DATES←(1 14 1974)(5 15 1974)(1 1 2000)(12 31 1999)(2 29 2000)(7 4 1776)(3 1 1900)(6 15 1582)
+ :For I :In ⍳≢DATES
+   D←I⊃DATES
+   RT←JNUINV JNU D
+   :If D≢RT
+     ⎕←'FAIL: JNUINV JNU ',(⍕D),' returned ',(⍕RT)
+     R←0
+   :EndIf
+ :EndFor
+ :If R
+   ⎕←'PASS: JNUINV round-trip (',( ⍕≢DATES),' dates)'
+ :EndIf

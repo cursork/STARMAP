@@ -1,0 +1,18 @@
+ Z←JNUINV JDN;L;N;I;J;D;M;Y
+⍝ Inverse of JNU: Julian day number → M D Y
+⍝ Standard Meeus inverse algorithm
+ L←⌊JDN+68569.5
+ N←⌊4×L÷146097
+ L←L-⌊((146097×N)+3)÷4
+ I←⌊4000×(L+1)÷1461001
+ L←31+L-⌊1461×I÷4
+ J←⌊80×L÷2447
+ D←L-⌊2447×J÷80
+ L←⌊J÷11
+ M←J+2-12×L
+ Y←(100×N-49)+I+L
+ Z←M D Y
+⍝ Verify round-trip; adjust day if needed
+ :If JDN≠JNU Z
+   Z[2]←Z[2]+⌊0.5+JDN-JNU Z
+ :EndIf

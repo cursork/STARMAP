@@ -1,5 +1,86 @@
- REPORTPLANETS
-⍝ Prints table of planet positions (RA, Dec, Alt, Az)
- ⎕←'Planet Positions:'
- ⎕←'RA(h)  Dec(°)  Alt(°)  Az(°)'
- ⎕←PLANETS
+ REPORTPLANETS;NAMES;NP;HALF;I;J;RAH;RAM;DEC;ALT;AZ;MX;MY;SYM;LINE;HDR;LPAD;W;ILLU;WX;PCHARS;ALLCOORD;LEFT;RIGHT;PHASE_LINE;TWOCOL;COLW
+⍝ Prints planet table matching book example
+⍝ Two-column if ⎕PW≥100, single-column otherwise
+⍝ Uses globals: PLANETS, PLANETAA, VP, PLANETCOORD, PHASE, PLANETNAMES
+ NP←⊃⍴PLANETS
+ NAMES←NP↑PLANETNAMES
+ PCHARS←NP↑'☾☉☿♀♂♃♄⛢♆♇☄'
+ W←⎕PW
+ ⍝
+ ⍝ Compute map-grid coords for all planets (visible get coords, others blank)
+ ALLCOORD←NP 2⍴0
+ :If ∨/VP
+   ALLCOORD[⍸VP;]←PLANETCOORD
+ :EndIf
+ ⍝
+ ⎕←''
+ ⎕←((0⌈⌊(W-34)÷2)⍴' '),'POSITION OF SUN, MOON AND PLANETS'
+ ⎕←''
+ ⍝
+ TWOCOL←W≥100
+ COLW←44
+ :If TWOCOL
+   HALF←⌈NP÷2
+   HDR←' ',(9⍴' '),'RT AS  DECL  ALT   AZ  MAP-GRID'
+   LPAD←0⌈⌊(W-2×≢HDR)÷2
+   ⎕←((LPAD)⍴' '),HDR,'  │',HDR
+ :Else
+   HALF←NP
+   HDR←' ',(9⍴' '),'RT AS  DECL  ALT   AZ  MAP-GRID'
+   LPAD←0⌈⌊(W-≢HDR)÷2
+   ⎕←((LPAD)⍴' '),HDR
+ :EndIf
+ ⍝
+ :For I :In ⍳HALF
+   ⍝ --- Format one planet entry ---
+   LEFT←''
+   :If I≤NP
+     SYM←PCHARS[I]
+     RAH←⌊PLANETS[I;1]
+     RAM←⌊0.5+60×PLANETS[I;1]-RAH
+     DEC←⌊0.5+PLANETS[I;2]
+     LEFT←SYM,' ',(¯9↑⊃NAMES[I])
+     LEFT←LEFT,(¯3↑⍕RAH),(¯3↑⍕RAM),(¯6↑⍕DEC)
+     :If VP[I]
+       ALT←⌊0.5+PLANETAA[I;1]
+       AZ←⌊0.5+PLANETAA[I;2]
+       LEFT←LEFT,(¯5↑⍕ALT),(¯5↑⍕AZ)
+       MX←0.01×⌊0.5+100×ALLCOORD[I;1]
+       MY←0.01×⌊0.5+100×ALLCOORD[I;2]
+       LEFT←LEFT,'  ',(¯5↑⍕MX),(¯5↑⍕MY)
+     :EndIf
+   :EndIf
+   ⍝
+   :If TWOCOL
+     J←I+HALF
+     RIGHT←''
+     :If J≤NP
+       SYM←PCHARS[J]
+       RAH←⌊PLANETS[J;1]
+       RAM←⌊0.5+60×PLANETS[J;1]-RAH
+       DEC←⌊0.5+PLANETS[J;2]
+       RIGHT←SYM,' ',(¯9↑⊃NAMES[J])
+       RIGHT←RIGHT,(¯3↑⍕RAH),(¯3↑⍕RAM),(¯6↑⍕DEC)
+       :If J≤≢VP
+       :AndIf VP[J]
+         ALT←⌊0.5+PLANETAA[J;1]
+         AZ←⌊0.5+PLANETAA[J;2]
+         RIGHT←RIGHT,(¯5↑⍕ALT),(¯5↑⍕AZ)
+         MX←0.01×⌊0.5+100×ALLCOORD[J;1]
+         MY←0.01×⌊0.5+100×ALLCOORD[J;2]
+         RIGHT←RIGHT,'  ',(¯5↑⍕MX),(¯5↑⍕MY)
+       :EndIf
+     :EndIf
+     LEFT←((LPAD)⍴' '),' ',LEFT,((0⌈COLW-≢LEFT)⍴' ')
+     ⎕←LEFT,'│ ',RIGHT
+   :Else
+     ⎕←((LPAD)⍴' '),' ',LEFT
+   :EndIf
+ :EndFor
+ ⍝
+ ⍝ Moon phase
+ ILLU←0.01×⌊0.5+100×0.5×1-COS○2×PHASE
+ WX←(1+PHASE>0.5)⊃'WAXING' 'WANING'
+ PHASE_LINE←'MOON PHASE ',(⍕ILLU),' ',WX
+ ⎕←((0⌈W-≢PHASE_LINE)⍴' '),PHASE_LINE
+ ⎕←''

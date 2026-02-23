@@ -1,0 +1,81 @@
+ R←TEST_POSITIONS;REF;STAR_REF;MOON_REF;SUN_REF;COMPUTED_STARS;COMPUTED_MOON;COMPUTED_SUN;RA_DEG;RA_ERR;DEC_ERR;TOTAL_ERR;MAX_ERR;WORST;NFAIL;STAR_TOL;MOON_TOL;SUN_TOL;MOON_ERR;SUN_ERR
+⍝ Test computed positions against Skyfield/JPL Horizons reference
+⍝ Observation: 1974-05-16 05:00 UTC, Anaheim CA (33.767N, 117.833W)
+⍝ reference_positions: 334x2 matrix (332 stars + Moon + Sun)
+⍝ Rows 1-332: apparent RA/Dec from Skyfield (J2000 precessed)
+⍝ Row 333: Moon geocentric apparent from JPL DE421
+⍝ Row 334: Sun geocentric apparent from JPL DE421
+ R←1
+
+⍝ Tolerances (degrees of angular separation)
+ STAR_TOL←0.15  ⍝ Linear precession vs IAU + no nutation/aberration
+ MOON_TOL←10    ⍝ Keplerian model vs full perturbation theory
+ SUN_TOL←3      ⍝ Keplerian Earth orbit (inherent ~2.6deg LST error)
+
+⍝ Set observation parameters (Anaheim test case)
+ STATEDDAYNO←JNU 5 16 1974
+ STATEDTIME←5
+ LONG←¯117.833
+ LAT←33.767
+ TIME←LONG TIMEADJUST STATEDTIME
+ DATE←STATEDDAYNO+(TIME÷24)-LONG÷360
+
+⍝ Load reference
+ REF←reference_positions
+ STAR_REF←REF[⍳332;]
+ MOON_REF←REF[333;]
+ SUN_REF←REF[334;]
+
+⍝ === Stars: test precession ===
+ COMPUTED_STARS←(DATE-CATEPOCH)PRECESS STARS
+⍝ RA difference in degrees, with wraparound
+ RA_DEG←15×|COMPUTED_STARS[;1]-STAR_REF[;1]
+ RA_DEG←RA_DEG⌊360-RA_DEG
+⍝ Weight RA by cos(Dec) for correct angular distance near poles
+ RA_ERR←(COS RADIAN STAR_REF[;2])×RA_DEG
+ DEC_ERR←|COMPUTED_STARS[;2]-STAR_REF[;2]
+ TOTAL_ERR←(((RA_ERR*2))+DEC_ERR*2)*0.5
+ MAX_ERR←⌈/TOTAL_ERR
+ NFAIL←+/TOTAL_ERR>STAR_TOL
+
+ :If MAX_ERR>STAR_TOL
+   WORST←TOTAL_ERR⍳⌈/TOTAL_ERR
+   ⎕←'FAIL: Stars max error ',(⍕MAX_ERR),'deg at star ',(⍕WORST),' (tolerance ',(⍕STAR_TOL),'deg, ',(⍕NFAIL),' failed)'
+   R←0
+ :EndIf
+
+⍝ === Moon: test MOONPOS ===
+ COMPUTED_MOON←MOONPOS DATE
+⍝ MOONPOS returns 1x3 matrix (RA hours, Dec degrees, distance)
+ RA_DEG←15×|COMPUTED_MOON[1;1]-MOON_REF[1]
+ RA_DEG←RA_DEG⌊360-RA_DEG
+ RA_ERR←(COS RADIAN MOON_REF[2])×RA_DEG
+ DEC_ERR←|COMPUTED_MOON[1;2]-MOON_REF[2]
+ MOON_ERR←(((RA_ERR*2))+DEC_ERR*2)*0.5
+
+ :If MOON_ERR>MOON_TOL
+   ⎕←'FAIL: Moon error ',(⍕MOON_ERR),'deg (tolerance ',(⍕MOON_TOL),'deg)'
+   ⎕←'  computed RA ',(⍕COMPUTED_MOON[1;1]),'h Dec ',(⍕COMPUTED_MOON[1;2]),'deg'
+   ⎕←'  reference RA ',(⍕MOON_REF[1]),'h Dec ',(⍕MOON_REF[2]),'deg'
+   R←0
+ :EndIf
+
+⍝ === Sun: test EARTHVIEW ===
+ COMPUTED_SUN←DATE EARTHVIEW 1 3⍴0 0 0
+⍝ EARTHVIEW returns 1x3 matrix (RA hours, Dec degrees, distance)
+ RA_DEG←15×|COMPUTED_SUN[1;1]-SUN_REF[1]
+ RA_DEG←RA_DEG⌊360-RA_DEG
+ RA_ERR←(COS RADIAN SUN_REF[2])×RA_DEG
+ DEC_ERR←|COMPUTED_SUN[1;2]-SUN_REF[2]
+ SUN_ERR←(((RA_ERR*2))+DEC_ERR*2)*0.5
+
+ :If SUN_ERR>SUN_TOL
+   ⎕←'FAIL: Sun error ',(⍕SUN_ERR),'deg (tolerance ',(⍕SUN_TOL),'deg)'
+   ⎕←'  computed RA ',(⍕COMPUTED_SUN[1;1]),'h Dec ',(⍕COMPUTED_SUN[1;2]),'deg'
+   ⎕←'  reference RA ',(⍕SUN_REF[1]),'h Dec ',(⍕SUN_REF[2]),'deg'
+   R←0
+ :EndIf
+
+ :If R
+   ⎕←'PASS: TEST_POSITIONS (332 stars max ',(⍕MAX_ERR),'deg, Moon ',(⍕MOON_ERR),'deg, Sun ',(⍕SUN_ERR),'deg)'
+ :EndIf

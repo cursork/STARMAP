@@ -111,6 +111,22 @@ The original had coefficient 1/8 instead of 3/4, causing COMETSOLVE's Newton ite
 
 ### 5. SKYPOS.aplf (Multiple fixes)
 
+#### 5c. Line 14 - Azimuth quadrant sign negated
+
+**Original (incorrect):**
+```apl
+S←×GQ[;3]
+```
+
+**Fixed:**
+```apl
+S←-×GQ[;3]
+```
+
+**Explanation:** After the equatorial-to-horizontal rotation `(LONGROTATE ROT)+.×LATROTATE LAT`, the z-component of the transformed vector has the opposite sign from what the azimuth extraction formula expects. The rotation matrix is correct (it produces correct altitudes and correct x-components), but the z-component is negated relative to the standard astronomical azimuth convention (North=0°, East=90°). Without this fix, all azimuths are reflected East↔West, causing objects to cluster on one side of the sky.
+
+Full derivation in `docs/calculation-fixes.md`, section 2.
+
 #### 5a. Line 10 - Syntax error and unclear logic
 
 **Original (broken):**
@@ -240,7 +256,31 @@ Z←⌽CARTESIAN⌽X
 
 ---
 
-### 9. DISPLAY.aplf (Lines 5-6)
+### 9. JNU.aplf (Line 9) — Gregorian correction
+
+**Problem:** APL right-to-left precedence gave wrong result for the Meeus Gregorian correction formula.
+
+**Original (incorrect):**
+```apl
+B←2-A+⌊A÷4
+```
+
+**Fixed:**
+```apl
+B←(2-A)+⌊A÷4
+```
+
+**Explanation:** The Meeus formula is B = 2 − A + ⌊A/4⌋. In APL, `2-A+⌊A÷4` evaluates right-to-left as `2-(A+⌊A÷4⌋)`, giving B = −21 for year 1974 instead of the correct B = −13. This made every Julian day number 8 less than correct.
+
+The EQUINOX constant (2441761.5) and planetary epoch dates in the `planets` table (2443600.5) are correct Julian day numbers from external references. Since DATE was computed by the buggy JNU, `DATE−EQUINOX` was systematically 8 days too small, causing ~2.6° sidereal time error and 8-day planetary ephemeris shift.
+
+**Collateral fix:** JNUINV simplified from a two-pass algorithm (compensating for JNU's bug) to the standard Meeus inverse plus round-trip safety check.
+
+Full derivation in `docs/calculation-fixes.md`, section 1.
+
+---
+
+### 10. DISPLAY.aplf (Lines 5-6)
 
 **Problem:** `⍞` prompt for IBM plotter blocked execution via RIDE/gritt.
 
@@ -262,7 +302,7 @@ WORK
 
 ---
 
-### 10. PLOTSTARS.aplf (Complete rewrite)
+### 11. PLOTSTARS.aplf (Complete rewrite)
 
 **Problem:** Original PLOTSTARS called FPLOT, an external IBM fine-plotting function not included in the book.
 
@@ -465,10 +505,12 @@ CALCULATESTARS
 | ORBROTATE.aplf | 1 | Reshape formula |
 | EARTHVIEW.aplf | 1 added | Shape enforcement |
 | AREADERIV.aplf | 1 | Wrong coefficient |
-| SKYPOS.aplf | 3 | Syntax + shapes |
+| SKYPOS.aplf | 4 | Syntax + shapes + azimuth sign |
 | CALCULATEPLANETS.aplf | 2 | Column selection |
 | CALCULATESTARS.aplf | 4 | Function/variable conflict |
 | MAPCARTESIAN.aplf | 1 | ⊖ vs ⌽ transcription error |
+| JNU.aplf | 1 | APL precedence error |
+| JNUINV.aplf | simplified | Removed two-pass JNU compensation |
 | DISPLAY.aplf | 2 removed | Removed ⍞ plotter prompt |
 | PLOTSTARS.aplf | full rewrite | ASCII art replaces FPLOT stub |
 
