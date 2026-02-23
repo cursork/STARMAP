@@ -39,7 +39,7 @@
  :EndIf
  ⍝
  ⍝ --- Plot planets (overwrite if overlapping) ---
- PCHARS←(≢VP)↑'O@123456789K'
+ PCHARS←(≢VP)↑'☾☉☿♀♂♃♄⛢♆♇☄'
  VPCHARS←VP/PCHARS
  :If 2=⍴⍴PLANETCOORD
    :For I :In ⍳⊃⍴PLANETCOORD

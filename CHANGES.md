@@ -150,9 +150,9 @@ The fix applies ARCCOS only to column 1 (X), properly normalized by the XZ-plane
 
 ---
 
-### 6. CALCULATEPLANETS.aplf (Lines 12-13)
+### 6. CALCULATEPLANETS.aplf (Lines 5, 12-13)
 
-**Problem:** Passed 3-column matrices to SKYPOS which expects 2 columns.
+**Problem A:** Passed 3-column matrices to SKYPOS which expects 2 columns.
 
 **Original (incorrect):**
 ```apl
@@ -163,12 +163,26 @@ AA←MN,[1](LAT,DATE,TIME)SKYPOS 1 0⌽PLANETS
 **Fixed:**
 ```apl
 MN←MN[;3]PARALLAXADJUST(LAT,DATE,TIME)SKYPOS MN[;1 2]
-AA←MN,[1](LAT,DATE,TIME)SKYPOS PLANETS[;1 2]
+AA←MN,[1](LAT,DATE,TIME)SKYPOS 1 0↓PLANETS
 ```
 
-**Explanation:** EARTHVIEW returns N×3 matrices (RA, Dec, Distance). SKYPOS expects N×2 (RA, Dec only). CARTRIPLET inside SKYPOS uses `RADEC[;1]` and `RADEC[;2]` indexing.
+**Explanation:** The book's `1 0⌽PLANETS` (or `1 0+PLANETS`) was a misreading of `1 0↓PLANETS` — drop 1 row, 0 columns. This removes the moon row from PLANETS before passing to SKYPOS, since the moon is already handled separately with parallax correction on line 12. CARTRIPLET inside SKYPOS only indexes `[;1]` and `[;2]`, so passing 3 columns is safe.
 
-The original `1 0⌽PLANETS` makes no sense - rotate doesn't help here. The book shows `1 0+PLANETS` which is also unclear. The fix explicitly selects columns 1 and 2.
+The earlier fix `PLANETS[;1 2]` selected columns correctly but kept all rows including the moon, causing the moon to appear twice in `AA` — once parallax-adjusted (from `MN`) and once raw (from PLANETS row 1). This shifted all planet symbols by one position: `@` (intended for Sun) was plotted on the duplicate moon, `1` (Mercury) on the Sun, etc.
+
+**Problem B:** Earth included in planet position computation.
+
+**Original:**
+```apl
+PLANETS←DATE EARTHVIEW DATE PLANETPOS planets
+```
+
+**Fixed:**
+```apl
+PLANETS←DATE EARTHVIEW DATE PLANETPOS planets[1 2 4 5 6 7 8 9;]
+```
+
+**Explanation:** The `planets` matrix includes Earth as row 3 (used by the `EARTH` function for reference). Computing Earth's position from Earth via `EARTHVIEW` yields a zero vector, which `SKYPOS` maps to altitude 90° (zenith), causing a spurious Earth marker on the map. The book's garbled expression `(3×19)/planets` (line 155 of the transcription) likely excluded Earth. Removing row 3 from the input to `PLANETPOS` eliminates this. `PLANETNAMES` and `PLOTSTARS` symbols updated to match.
 
 ---
 

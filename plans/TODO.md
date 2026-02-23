@@ -27,6 +27,14 @@ None currently.
 
 ## Session log
 
+### 2026-02-23
+- Fixed moon duplication bug in CALCULATEPLANETS: book's `1 0⌽PLANETS` was misread `1 0↓PLANETS` (drop moon row before SKYPOS, since moon already handled with parallax)
+- Fixed off-by-one planet labelling (consequence of moon duplication)
+- Removed spurious Earth from planet computation (row 3 of `planets` excluded from `PLANETPOS` call)
+- Replaced ASCII planet symbols with Unicode astronomical symbols (☾☉☿♀♂♃♄⛢♆♇☄)
+- Updated PLANETNAMES to remove Earth
+- Updated CHANGES.md section 6
+
 ### 2026-02-05
 - Completed star table reconstruction from BSC5 catalog
 - Created extraction script `yale-catalog/extract_stars.py`
