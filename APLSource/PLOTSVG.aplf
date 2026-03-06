@@ -1,0 +1,223 @@
+ Z←PLOTSVG;S;CX;CY;R;I;X;Y;BVIS;PCHARS;VPCHARS;NP;VPNAMES;SX;SY;NM;FMT;A;HX;HY;SR;COL;MDY;M;D;YR;DN;H;AP;LATD;LATM;NS;LONGD;LONGM;EW;MN;TITLE;BN;BI;PAD;TY;LINE;RAH;RAM;DEC;ALT;AZ;MX;MY;SYM;NAMES;ALLCOORD;NB;BV;BNAMES;BCOORD;ILLU;WX;NLEN;ENTRY;J;VHEIGHT;NCOLS;ROW;HDR;PHASE_LINE
+⍝ Generate SVG star map — stereographic projection centered on zenith
+⍝ Returns a character vector containing a complete SVG document
+⍝ Coordinate system: 2160×2160 map with padding and report tables
+⍝ Uses globals: STARCOORD, PLANETCOORD, VE, VP, BRIGHT, STARNAMES, PLANETNAMES
+⍝              AAE, PHASE, STATEDDAYNO, STATEDTIME, LAT, LONG, PLANETS, PLANETAA
+ PAD←80
+ CX←PAD+1080 ⋄ CY←PAD+1080 ⋄ R←1080
+ FMT←{⍕⌊0.5+⍵}
+
+⍝ --- Build title ---
+ MDY←JNUINV STATEDDAYNO
+ M←MDY[1] ⋄ D←MDY[2] ⋄ YR←MDY[3]
+ DN←DAYNAME STATEDDAYNO
+ LATD←⌊|LAT ⋄ LATM←⌊0.5+60×(|LAT)-LATD
+ NS←(1+LAT<0)⊃'NORTH' 'SOUTH'
+ LONGD←⌊|LONG ⋄ LONGM←⌊0.5+60×(|LONG)-LONGD
+ EW←(1+LONG>0)⊃'WEST' 'EAST'
+ H←12|STATEDTIME
+ :If H=0 ⋄ H←12 ⋄ :EndIf
+ AP←(1+STATEDTIME<12)⊃'PM' 'AM'
+ MN←⍕⌊0.5+60×H-⌊H
+ :If 1=≢MN ⋄ MN←'0',MN ⋄ :EndIf
+ TITLE←'VIEW FROM ',(⍕LATD),' DEGREES ',(⍕LATM),' MINUTES ',NS
+ TITLE,←', ',(⍕LONGD),' DEGREES ',(⍕LONGM),' MINUTES ',EW
+ TITLE,←', ON ',DN,' ',(⍕YR),'/',(⍕M),'/',(⍕D)
+ TITLE,←' AT ',(⍕⌊H),':',MN,' ',AP
+
+⍝ --- Placeholder SVG header (viewBox height set at end) ---
+⍝ We build body first, then wrap with correct height
+ S←''
+
+⍝ --- Background (full size, set at end) ---
+⍝ Placeholder — will be replaced
+
+⍝ --- Title ---
+ S,←'<text class="title" x="',(⍕PAD+1080),'" y="',(⍕PAD-20),'">',TITLE,'</text>'
+
+⍝ --- Crosshairs ---
+ S,←'<g id="crosshairs" stroke="#333" stroke-width="1">'
+ S,←'<line x1="',(⍕PAD),'" y1="',(⍕CY),'" x2="',(⍕PAD+2160),'" y2="',(⍕CY),'"/>'
+ S,←'<line x1="',(⍕CX),'" y1="',(⍕PAD),'" x2="',(⍕CX),'" y2="',(⍕PAD+2160),'"/>'
+ S,←'</g>'
+
+⍝ --- Horizon circle ---
+ S,←'<circle id="horizon" cx="',(⍕CX),'" cy="',(⍕CY),'" r="',(⍕R),'" fill="none" stroke="#555" stroke-width="2"/>'
+
+⍝ --- Cardinal directions ---
+ S,←'<text class="cardinal" x="',(⍕CX),'" y="',(FMT CY-R-20),'">N</text>'
+ S,←'<text class="cardinal" x="',(⍕CX),'" y="',(FMT CY+R+35),'">S</text>'
+ S,←'<text class="cardinal" x="',(FMT CX-R-25),'" y="',(⍕CY),'">E</text>'
+ S,←'<text class="cardinal" x="',(FMT CX+R+25),'" y="',(⍕CY),'">W</text>'
+
+⍝ --- Stars ---
+ :If 2=⍴⍴STARCOORD
+   BVIS←VE/BRIGHT
+   :For I :In ⍳⊃⍴STARCOORD
+     X←CX+R×STARCOORD[I;1]
+     Y←CY-R×STARCOORD[I;2]
+     :If BVIS[I]
+       SR←8 ⋄ COL←'bright'
+     :Else
+       SR←3 ⋄ COL←'faint'
+     :EndIf
+     S,←'<circle class="',COL,'" cx="',(FMT X),'" cy="',(FMT Y),'" r="',(⍕SR),'"/>'
+   :EndFor
+
+⍝ --- Bright star labels ---
+   BN←(BRIGHT∧VE)/STARNAMES
+   BI←⍸BVIS
+   :For I :In ⍳≢BI
+     X←CX+R×STARCOORD[BI[I];1]
+     Y←CY-R×STARCOORD[BI[I];2]
+     NM←⊃BN[I]
+     S,←'<text class="star-label" x="',(FMT X+12),'" y="',(FMT Y-12),'">',NM,'</text>'
+   :EndFor
+ :EndIf
+
+⍝ --- Planets ---
+ PCHARS←(≢VP)↑'☾☉☿♀♂♃♄⛢♆♇☄'
+ VPCHARS←VP/PCHARS
+ NP←≢VP
+ VPNAMES←VP/NP↑PLANETNAMES
+ :If 2=⍴⍴PLANETCOORD
+   :For I :In ⍳⊃⍴PLANETCOORD
+     X←CX+R×PLANETCOORD[I;1]
+     Y←CY-R×PLANETCOORD[I;2]
+     S,←'<text class="planet" x="',(FMT X),'" y="',(FMT Y),'">',VPCHARS[I],'</text>'
+     S,←'<text class="planet-label" x="',(FMT X+20),'" y="',(FMT Y-16),'">',(⊃VPNAMES[I]),'</text>'
+   :EndFor
+ :EndIf
+
+⍝ --- Zenith marker ---
+ S,←'<circle cx="',(⍕CX),'" cy="',(⍕CY),'" r="4" fill="none" stroke="#666" stroke-width="1.5"/>'
+
+⍝ --- Legend ---
+ S,←'<g class="legend" transform="translate(',(⍕PAD+40),',',(⍕PAD+2160+10),')">'
+ S,←'<circle class="bright" cx="0" cy="0" r="8"/><text x="16" y="6">bright</text>'
+ S,←'<circle class="faint" cx="120" cy="0" r="3"/><text x="130" y="6">faint</text>'
+ S,←'<circle cx="230" cy="0" r="4" fill="none" stroke="#666" stroke-width="1.5"/><text x="242" y="6">zenith</text>'
+ S,←'<text x="350" y="6" fill="#555">— horizon</text>'
+ S,←'</g>'
+
+⍝ === PLANET TABLE ===
+ TY←PAD+2160+120
+ NP←⊃⍴PLANETS
+ NAMES←NP↑PLANETNAMES
+ ALLCOORD←NP 2⍴0
+ :If ∨/VP
+   ALLCOORD[⍸VP;]←PLANETCOORD
+ :EndIf
+
+⍝ Table layout: columns with pixel positions
+⍝ Cols: Symbol+Name | RA h | RA m | Dec | Alt | Az | Map X | Map Y
+ S,←'<text class="table-header" x="',(⍕PAD+1080),'" y="',(⍕TY),'">POSITION OF SUN, MOON AND PLANETS</text>'
+ TY←TY+50
+
+⍝ Column x-positions for planet table
+⍝ TX holds: name, rah, ram, dec, alt, az, mx, my
+ S,←'<g class="table-text">'
+
+⍝ Header row
+ S,←'<text x="',(⍕PAD+60),'" y="',(⍕TY),'">BODY</text>'
+ S,←'<text class="table-hdr-r" x="',(⍕PAD+340),'" y="',(⍕TY),'">RA h</text>'
+ S,←'<text class="table-hdr-r" x="',(⍕PAD+440),'" y="',(⍕TY),'">RA m</text>'
+ S,←'<text class="table-hdr-r" x="',(⍕PAD+560),'" y="',(⍕TY),'">DEC</text>'
+ S,←'<text class="table-hdr-r" x="',(⍕PAD+680),'" y="',(⍕TY),'">ALT</text>'
+ S,←'<text class="table-hdr-r" x="',(⍕PAD+790),'" y="',(⍕TY),'">AZ</text>'
+ S,←'<text class="table-hdr-r" x="',(⍕PAD+920),'" y="',(⍕TY),'">MAP X</text>'
+ S,←'<text class="table-hdr-r" x="',(⍕PAD+1050),'" y="',(⍕TY),'">MAP Y</text>'
+
+⍝ Header underline
+ TY←TY+8
+ S,←'<line x1="',(⍕PAD+40),'" y1="',(⍕TY),'" x2="',(⍕PAD+1080),'" y2="',(⍕TY),'" stroke="#555" stroke-width="1"/>'
+ TY←TY+32
+
+ :For I :In ⍳NP
+   SYM←(NP↑'☾☉☿♀♂♃♄⛢♆♇☄')[I]
+   RAH←⌊PLANETS[I;1]
+   RAM←⌊0.5+60×PLANETS[I;1]-RAH
+   DEC←⌊0.5+PLANETS[I;2]
+   S,←'<text x="',(⍕PAD+60),'" y="',(⍕TY),'">',SYM,' ',(⊃NAMES[I]),'</text>'
+   S,←'<text class="table-r" x="',(⍕PAD+340),'" y="',(⍕TY),'">',(⍕RAH),'</text>'
+   S,←'<text class="table-r" x="',(⍕PAD+440),'" y="',(⍕TY),'">',(⍕RAM),'</text>'
+   S,←'<text class="table-r" x="',(⍕PAD+560),'" y="',(⍕TY),'">',(⍕DEC),'</text>'
+   :If VP[I]
+     ALT←⌊0.5+PLANETAA[I;1]
+     AZ←⌊0.5+PLANETAA[I;2]
+     MX←0.01×⌊0.5+100×ALLCOORD[I;1]
+     MY←0.01×⌊0.5+100×ALLCOORD[I;2]
+     S,←'<text class="table-r" x="',(⍕PAD+680),'" y="',(⍕TY),'">',(⍕ALT),'</text>'
+     S,←'<text class="table-r" x="',(⍕PAD+790),'" y="',(⍕TY),'">',(⍕AZ),'</text>'
+     S,←'<text class="table-r" x="',(⍕PAD+920),'" y="',(⍕TY),'">',(⍕MX),'</text>'
+     S,←'<text class="table-r" x="',(⍕PAD+1050),'" y="',(⍕TY),'">',(⍕MY),'</text>'
+   :EndIf
+   TY←TY+34
+ :EndFor
+ S,←'</g>'
+
+⍝ Moon phase line
+ TY←TY+10
+ ILLU←0.01×⌊0.5+100×0.5×1-COS○2×PHASE
+ WX←(1+PHASE>0.5)⊃'WAXING' 'WANING'
+ PHASE_LINE←'MOON PHASE ',(⍕ILLU),' ',WX
+ S,←'<text class="table-text" x="',(⍕PAD+60),'" y="',(⍕TY),'">',PHASE_LINE,'</text>'
+ TY←TY+60
+
+⍝ === BRIGHT STAR TABLE ===
+ BV←BRIGHT∧VE
+ NB←+/BV
+ :If NB>0
+   BNAMES←BV/STARNAMES
+   BCOORD←(VE/BRIGHT)⌿STARCOORD
+   S,←'<text class="table-header" x="',(⍕PAD+1080),'" y="',(⍕TY),'">BRIGHT STARS</text>'
+   TY←TY+50
+
+⍝ Header row
+   S,←'<g class="table-text">'
+   S,←'<text x="',(⍕PAD+60),'" y="',(⍕TY),'">STAR</text>'
+   S,←'<text class="table-hdr-r" x="',(⍕PAD+340),'" y="',(⍕TY),'">ALT</text>'
+   S,←'<text class="table-hdr-r" x="',(⍕PAD+440),'" y="',(⍕TY),'">AZ</text>'
+   S,←'<text class="table-hdr-r" x="',(⍕PAD+560),'" y="',(⍕TY),'">MAP X</text>'
+   S,←'<text class="table-hdr-r" x="',(⍕PAD+680),'" y="',(⍕TY),'">MAP Y</text>'
+   TY←TY+8
+   S,←'<line x1="',(⍕PAD+40),'" y1="',(⍕TY),'" x2="',(⍕PAD+720),'" y2="',(⍕TY),'" stroke="#555" stroke-width="1"/>'
+   TY←TY+32
+
+   :For I :In ⍳NB
+     ALT←⌊0.5+AAE[I;1]
+     AZ←⌊0.5+AAE[I;2]
+     MX←0.01×⌊0.5+100×BCOORD[I;1]
+     MY←0.01×⌊0.5+100×BCOORD[I;2]
+     S,←'<text x="',(⍕PAD+60),'" y="',(⍕TY),'">',(⊃BNAMES[I]),'</text>'
+     S,←'<text class="table-r" x="',(⍕PAD+340),'" y="',(⍕TY),'">',(⍕ALT),'</text>'
+     S,←'<text class="table-r" x="',(⍕PAD+440),'" y="',(⍕TY),'">',(⍕AZ),'</text>'
+     S,←'<text class="table-r" x="',(⍕PAD+560),'" y="',(⍕TY),'">',(⍕MX),'</text>'
+     S,←'<text class="table-r" x="',(⍕PAD+680),'" y="',(⍕TY),'">',(⍕MY),'</text>'
+     TY←TY+34
+   :EndFor
+   S,←'</g>'
+ :EndIf
+
+⍝ --- Compute final height and wrap ---
+ VHEIGHT←TY+PAD
+ Z←'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ',(⍕2160+2×PAD),' ',(⍕VHEIGHT),'" width="',(⍕2160+2×PAD),'" height="',(⍕VHEIGHT),'">'
+ Z,←'<defs><style>'
+ Z,←'text{font-family:monospace;fill:#ccc}'
+ Z,←'.bright{fill:#ffd700}'
+ Z,←'.faint{fill:#aaa}'
+ Z,←'.star-label{font-size:28px;fill:#ffd700}'
+ Z,←'.planet{fill:#4fc3f7;font-size:36px}'
+ Z,←'.planet-label{font-size:24px;fill:#4fc3f7}'
+ Z,←'.cardinal{font-size:40px;fill:#888;text-anchor:middle;dominant-baseline:central}'
+ Z,←'.legend{font-size:22px;fill:#999}'
+ Z,←'.title{font-size:26px;fill:#999;text-anchor:middle}'
+ Z,←'.table-header{font-size:28px;fill:#bbb;text-anchor:middle}'
+ Z,←'.table-text{font-size:26px;fill:#999}'
+ Z,←'.table-hdr-r{font-size:26px;fill:#bbb;text-anchor:end}'
+ Z,←'.table-r{font-size:26px;fill:#999;text-anchor:end}'
+ Z,←'</style></defs>'
+ Z,←'<rect width="',(⍕2160+2×PAD),'" height="',(⍕VHEIGHT),'" fill="#0a0a1a"/>'
+ Z,←S
+ Z,←'</svg>'

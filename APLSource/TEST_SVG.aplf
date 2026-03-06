@@ -1,0 +1,112 @@
+ R←TEST_SVG;SVG;CX;CY;RAD;N
+⍝ Test PLOTSVG generates valid SVG markup
+⍝ Runs after standard pipeline setup (Anaheim 1974 test case)
+ R←1
+
+⍝ Set observation parameters (same as EXAMPLE_RENDER)
+ STATEDDAYNO←JNU 5 16 1974
+ STATEDTIME←5
+ LONG←¯117.833
+ LAT←33.767
+ TIME←LONG TIMEADJUST STATEDTIME
+ DATE←STATEDDAYNO+(TIME÷24)-LONG÷360
+ CALCULATEPLANETS
+ CALCULATESTARS
+
+⍝ Generate SVG
+ SVG←PLOTSVG
+
+⍝ Must return a character vector
+ :If ~(1=⍴⍴SVG)∧(''≡0⍴SVG)
+   ⎕←'FAIL: PLOTSVG must return a character vector'
+   R←0
+   :Return
+ :EndIf
+
+⍝ Must be non-empty
+ :If 0=≢SVG
+   ⎕←'FAIL: PLOTSVG returned empty string'
+   R←0
+   :Return
+ :EndIf
+
+⍝ Must start with SVG tag (possibly with XML declaration)
+ :If ~∨/'<svg '⍷SVG
+   ⎕←'FAIL: no <svg element found'
+   R←0
+ :EndIf
+
+⍝ Must close the SVG tag
+ :If ~∨/'</svg>'⍷SVG
+   ⎕←'FAIL: no closing </svg> tag'
+   R←0
+ :EndIf
+
+⍝ Must contain viewBox with 2320 width (2160 + 2×80 padding)
+ :If ~∨/'viewBox="0 0 2320'⍷SVG
+   ⎕←'FAIL: viewBox width not 2320 (2160 + padding)'
+   R←0
+ :EndIf
+
+⍝ Must contain horizon circle (cx=1080 cy=1080 r=1080)
+ :If ~∨/'id="horizon"'⍷SVG
+   ⎕←'FAIL: no horizon circle element'
+   R←0
+ :EndIf
+
+⍝ Must contain crosshairs
+ :If ~∨/'id="crosshairs"'⍷SVG
+   ⎕←'FAIL: no crosshairs element'
+   R←0
+ :EndIf
+
+⍝ Must contain cardinal direction labels
+ :If ~(∨/'>N<'⍷SVG)∧(∨/'>S<'⍷SVG)∧(∨/'>E<'⍷SVG)∧(∨/'>W<'⍷SVG)
+   ⎕←'FAIL: missing cardinal direction labels'
+   R←0
+ :EndIf
+
+⍝ Must contain star circles — at least as many as visible stars
+ N←+/'<circle '⍷SVG
+ :If N<+/VE
+   ⎕←'FAIL: only ',(⍕N),' <circle elements, expected at least ',(⍕+/VE)
+   R←0
+ :EndIf
+
+⍝ Must contain bright star labels — check a few known names
+ :If ~∨/'Arcturus'⍷SVG
+   ⎕←'FAIL: bright star label Arcturus not found'
+   R←0
+ :EndIf
+ :If ~∨/'Vega'⍷SVG
+   ⎕←'FAIL: bright star label Vega not found'
+   R←0
+ :EndIf
+
+⍝ Must contain planet symbols for visible planets
+ :If ~∨/'class="planet"'⍷SVG
+   ⎕←'FAIL: no planet elements found'
+   R←0
+ :EndIf
+
+⍝ Must contain planet report table
+ :If ~∨/'POSITION OF SUN, MOON AND PLANETS'⍷SVG
+   ⎕←'FAIL: planet table header not found'
+   R←0
+ :EndIf
+
+⍝ Must contain moon phase line
+ :If ~∨/'MOON PHASE'⍷SVG
+   ⎕←'FAIL: moon phase line not found'
+   R←0
+ :EndIf
+
+⍝ Must contain bright star table
+ :If ~∨/'BRIGHT STARS'⍷SVG
+   ⎕←'FAIL: bright star table not found'
+   R←0
+ :EndIf
+
+ :If R
+   ⎕←'PASS: TEST_SVG (',(⍕≢SVG),' chars, ',(⍕+/VE),' stars, ',(⍕+/VP),' planets)'
+ :EndIf

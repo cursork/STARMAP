@@ -1,0 +1,6 @@
+ SAVESVG FN;SVG
+⍝ Write SVG star map to file
+⍝ FN: filename (character vector)
+ SVG←PLOTSVG
+ (⊂SVG)⎕NPUT FN 1
+ ⎕←'SVG written to ',FN,' (',(⍕≢SVG),' chars)'
