@@ -14,7 +14,7 @@
 
 None currently.
 
-## Completed (this session)
+## Previously completed
 
 - **Restore book-faithful APL architecture** (branch `restore-book-architecture`)
   - 11 selector functions: removed `:If`/`:Else` rank guards, restored `Z←ORB[;N]` one-liners
@@ -28,8 +28,6 @@ None currently.
   - New TEST_SKYPOS: 9 bright stars + Sun alt/az, visibility count (0.005 deg max error)
   - New TEST_PIPELINE: CALCULATESTARS + CALCULATEPLANETS end-to-end shapes and values
   - All 7 tests pass, visual render matches EXAMPLE_RENDER.png reference
-
-## Previously completed
 
 - **Planet epoch fix** (branch `fix-sky-coordinates`)
   - Fixed ANOMALYDATE inconsistency in `planets.aplf`: column 10 changed from JD 2443600.5 to JD 2441720.5
@@ -60,6 +58,14 @@ None currently.
 ---
 
 ## Session log
+
+### 2026-03-02 (CHANGES.md audit)
+- Audited CHANGES.md against actual source files, found and corrected several discrepancies
+- Fixed: EARTHVIEW entry (⍣ guard was removed, not present), SKYPOS normalization idiom, azimuth formula details, CALCULATEPLANETS Earth exclusion method, PLOTSTARS symbols (Unicode not ASCII), PLANETNAMES count (11 not 12), STARNAMES count (332 not 50)
+- Added 7 previously undocumented fixes: LATROTATE (⊖⊖→⌽⊖), PRECESS (sign + reverse), MOONPOS (negation), planets.aplf (epoch date), moon.aplf (decimal places), COMETPOS (matrix reshape), PLANETSPOS (scalar index)
+- Added 11 selector function rank-guard removal, all new/rewritten files, complete file tables
+- Updated TODO.md: moved stale "this session" items to "previously completed"
+- Branch: `hacks`
 
 ### 2026-02-26 (restore book architecture)
 - Created branch `restore-book-architecture` from `fix-sky-coordinates`
