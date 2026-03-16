@@ -1,0 +1,100 @@
+ R←TEST_ANIMATEDSVG;SVG;LEN
+⍝ Test ANIMATEDSVG generates valid animated SVG with JS animation
+⍝ Uses a 3-day range, verifies structure and animation elements
+ R←1
+
+⍝ Generate animated SVG: May 15-17 1974, 5h UTC, Anaheim
+ SVG←30 ANIMATEDSVG(5 15 1974)(5 17 1974) 5 33.767 ¯117.833
+
+⍝ Must be valid SVG
+ :If ~∨/'<svg '⍷SVG
+   ⎕←'FAIL: missing <svg element'
+   R←0
+ :EndIf
+ :If ~∨/'</svg>'⍷SVG
+   ⎕←'FAIL: missing closing </svg>'
+   R←0
+ :EndIf
+
+⍝ Must have correct width in viewBox
+ :If ~∨/'viewBox="0 0 2320 '⍷SVG
+   ⎕←'FAIL: viewBox width not 2320'
+   R←0
+ :EndIf
+
+⍝ Must contain JavaScript animation
+ :If ~∨/'<script'⍷SVG
+   ⎕←'FAIL: no <script> element found'
+   R←0
+ :EndIf
+
+⍝ JS must reference correct frame count
+ :If ~∨/'NFRAMES=3'⍷SVG
+   ⎕←'FAIL: incorrect frame count in JS'
+   R←0
+ :EndIf
+
+⍝ Must contain star catalog data
+ :If ~∨/'STARS_RA'⍷SVG
+   ⎕←'FAIL: missing star catalog in JS'
+   R←0
+ :EndIf
+
+⍝ Must contain planet pre-computed data
+ :If ~∨/'"rah":'⍷SVG
+   ⎕←'FAIL: missing planet data in JS'
+   R←0
+ :EndIf
+
+⍝ Must embed correct start Julian day
+ :If ~∨/'JD1=2442182.5'⍷SVG
+   ⎕←'FAIL: missing start Julian day'
+   R←0
+ :EndIf
+
+⍝ Map elements present
+ :If ~∨/'class="faint"'⍷SVG
+   ⎕←'FAIL: no faint star elements'
+   R←0
+ :EndIf
+ :If ~∨/'class="bright"'⍷SVG
+   ⎕←'FAIL: no bright star elements'
+   R←0
+ :EndIf
+ :If ~∨/'class="planet"'⍷SVG
+   ⎕←'FAIL: no planet elements'
+   R←0
+ :EndIf
+
+⍝ Tables present
+ :If ~∨/'POSITION OF SUN, MOON AND PLANETS'⍷SVG
+   ⎕←'FAIL: missing planet table'
+   R←0
+ :EndIf
+ :If ~∨/'BRIGHT STARS'⍷SVG
+   ⎕←'FAIL: missing bright star table'
+   R←0
+ :EndIf
+
+⍝ Must have star elements with IDs for JS animation
+ :If ~∨/'id="s0"'⍷SVG
+   ⎕←'FAIL: missing star element IDs'
+   R←0
+ :EndIf
+
+⍝ Must have planet table cell IDs
+ :If ~∨/'id="pt-rah-0"'⍷SVG
+   ⎕←'FAIL: missing planet table cell IDs'
+   R←0
+ :EndIf
+
+⍝ Animated SVG should be smaller than 3 separate frames (3x17KB=51KB)
+ LEN←≢SVG
+ :If LEN>100000
+   ⎕←'FAIL: animated SVG (',(⍕LEN),' chars) unexpectedly large for 3 frames'
+   R←0
+ :EndIf
+
+ :If R
+   ⎕←'PASS: TEST_ANIMATEDSVG (3-day animated SVG verified)'
+ :EndIf
