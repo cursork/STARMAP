@@ -1,0 +1,7 @@
+ Z←FRAMESVG
+⍝ Generate fixed-height SVG frame for animation
+⍝ Wraps PLOTSVG with minimum height 3800 for consistent video frames
+⍝ Uses same globals as PLOTSVG
+ PLOTSVG_MINHT←3800
+ Z←PLOTSVG
+ ⎕EX 'PLOTSVG_MINHT'

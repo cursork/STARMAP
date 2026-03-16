@@ -1,0 +1,71 @@
+ R←TEST_ANIMATE;DIR;NDAYS;I;FN;SVG;PAD;EXISTS;ROOT
+⍝ Test ANIMATE generates correct SVG frame files
+⍝ Uses a 3-day range, verifies file count and content
+ R←1
+
+⍝ Output directory within project
+ ROOT←(∊⊃⎕SHELL 'pwd')~⎕UCS 10 13
+ DIR←ROOT,'/output/test_frames'
+ {}⎕SHELL 'mkdir -p ',DIR
+ {}⎕SHELL 'rm -f ',DIR,'/frame_*.svg'
+
+⍝ Generate 3 frames: May 15-17 1974, 5h UTC, Anaheim
+ (5 15 1974)(5 17 1974) 5 33.767 ¯117.833 ANIMATE DIR
+ NDAYS←3
+
+⍝ Check correct number of files
+ :For I :In ⍳NDAYS
+   PAD←'00000',⍕I
+   FN←DIR,'/frame_',(¯5↑PAD),'.svg'
+   :If ~⎕NEXISTS FN
+     ⎕←'FAIL: missing frame file ',(¯5↑PAD),'.svg'
+     R←0
+   :EndIf
+ :EndFor
+
+⍝ No extra frames beyond expected count
+ PAD←'00000',⍕NDAYS+1
+ FN←DIR,'/frame_',(¯5↑PAD),'.svg'
+ :If ⎕NEXISTS FN
+   ⎕←'FAIL: unexpected extra frame file found'
+   R←0
+ :EndIf
+
+⍝ Each frame must be valid fixed-height SVG
+ :For I :In ⍳NDAYS
+   PAD←'00000',⍕I
+   FN←DIR,'/frame_',(¯5↑PAD),'.svg'
+   SVG←⊃⎕NGET FN
+   :If ~∨/'viewBox="0 0 2320 3800"'⍷SVG
+     ⎕←'FAIL: frame ',(⍕I),' viewBox not fixed at 2320x3800'
+     R←0
+   :EndIf
+   :If ~∨/'<svg '⍷SVG
+     ⎕←'FAIL: frame ',(⍕I),' missing <svg element'
+     R←0
+   :EndIf
+   :If ~∨/'</svg>'⍷SVG
+     ⎕←'FAIL: frame ',(⍕I),' missing closing </svg>'
+     R←0
+   :EndIf
+ :EndFor
+
+⍝ Frames must have different dates in their titles
+ SVG←⊃⎕NGET(DIR,'/frame_00001.svg')
+ :If ~∨/'1974/5/15'⍷SVG
+   ⎕←'FAIL: frame 1 title should contain 1974/5/15'
+   R←0
+ :EndIf
+
+ SVG←⊃⎕NGET(DIR,'/frame_00003.svg')
+ :If ~∨/'1974/5/17'⍷SVG
+   ⎕←'FAIL: frame 3 title should contain 1974/5/17'
+   R←0
+ :EndIf
+
+⍝ Clean up
+ {}⎕SHELL 'rm -rf ',DIR
+
+ :If R
+   ⎕←'PASS: TEST_ANIMATE (3 frames verified)'
+ :EndIf

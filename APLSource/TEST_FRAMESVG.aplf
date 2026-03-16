@@ -1,0 +1,97 @@
+ R←TEST_FRAMESVG;SVG;SVG2
+⍝ Test FRAMESVG generates fixed-height SVG frames for animation
+⍝ Two different dates must produce identical viewBox dimensions
+ R←1
+
+⍝ --- Frame 1: Anaheim, May 16 1974 ---
+ STATEDDAYNO←JNU 5 16 1974
+ STATEDTIME←5
+ LONG←¯117.833
+ LAT←33.767
+ TIME←LONG TIMEADJUST STATEDTIME
+ DATE←STATEDDAYNO+(TIME÷24)-LONG÷360
+ CALCULATEPLANETS
+ CALCULATESTARS
+ SVG←FRAMESVG
+
+⍝ Must return a character vector
+ :If ~(1=⍴⍴SVG)∧(''≡0⍴SVG)
+   ⎕←'FAIL: FRAMESVG must return a character vector'
+   R←0
+   :Return
+ :EndIf
+
+⍝ Must be non-empty
+ :If 0=≢SVG
+   ⎕←'FAIL: FRAMESVG returned empty string'
+   R←0
+   :Return
+ :EndIf
+
+⍝ ViewBox must be fixed at 2320x3800
+ :If ~∨/'viewBox="0 0 2320 3800"'⍷SVG
+   ⎕←'FAIL: viewBox not fixed at 2320x3800'
+   R←0
+ :EndIf
+
+⍝ SVG width/height attributes must match
+ :If ~∨/'width="2320" height="3800"'⍷SVG
+   ⎕←'FAIL: SVG width/height attributes not 2320x3800'
+   R←0
+ :EndIf
+
+⍝ Background rect must fill the fixed height
+ :If ~∨/'height="3800" fill="#0a0a1a"'⍷SVG
+   ⎕←'FAIL: background rect not full fixed height'
+   R←0
+ :EndIf
+
+⍝ Must contain all map elements
+ :If ~∨/'id="horizon"'⍷SVG
+   ⎕←'FAIL: horizon circle missing'
+   R←0
+ :EndIf
+
+ :If ~∨/'id="crosshairs"'⍷SVG
+   ⎕←'FAIL: crosshairs missing'
+   R←0
+ :EndIf
+
+ :If ~(∨/'>N<'⍷SVG)∧(∨/'>S<'⍷SVG)∧(∨/'>E<'⍷SVG)∧(∨/'>W<'⍷SVG)
+   ⎕←'FAIL: missing cardinal direction labels'
+   R←0
+ :EndIf
+
+⍝ Must contain tables (animation includes full layout)
+ :If ~∨/'POSITION OF SUN, MOON AND PLANETS'⍷SVG
+   ⎕←'FAIL: planet table missing'
+   R←0
+ :EndIf
+
+ :If ~∨/'BRIGHT STARS'⍷SVG
+   ⎕←'FAIL: bright star table missing'
+   R←0
+ :EndIf
+
+ :If ~∨/'MOON PHASE'⍷SVG
+   ⎕←'FAIL: moon phase missing'
+   R←0
+ :EndIf
+
+⍝ --- Frame 2: different date, same location ---
+⍝ Dimensions must be identical regardless of sky content
+ STATEDDAYNO←JNU 12 25 1974
+ TIME←LONG TIMEADJUST STATEDTIME
+ DATE←STATEDDAYNO+(TIME÷24)-LONG÷360
+ CALCULATEPLANETS
+ CALCULATESTARS
+ SVG2←FRAMESVG
+
+ :If ~∨/'viewBox="0 0 2320 3800"'⍷SVG2
+   ⎕←'FAIL: second frame viewBox not fixed at 2320x3800'
+   R←0
+ :EndIf
+
+ :If R
+   ⎕←'PASS: TEST_FRAMESVG (',(⍕≢SVG),' / ',(⍕≢SVG2),' chars)'
+ :EndIf

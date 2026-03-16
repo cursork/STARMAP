@@ -1,0 +1,22 @@
+ ARGS ANIMATE DIR;JD1;JD2;NDAYS;I;PAD;FN;START;END;T;LA;LO
+⍝ Generate SVG frames for animation, one per day
+⍝ ARGS: (M D Y)(M D Y) TIME LAT LONG — start date, end date, UTC time, lat, long
+⍝ DIR: output directory (must exist)
+⍝ Writes frame_00001.svg through frame_NNNNN.svg
+ START END T LA LO←ARGS
+ JD1←JNU START
+ JD2←JNU END
+ NDAYS←1+JD2-JD1
+ :For I :In ⍳NDAYS
+   STATEDDAYNO←JD1+I-1
+   STATEDTIME←T
+   LAT←LA ⋄ LONG←LO
+   TIME←LO TIMEADJUST T
+   DATE←STATEDDAYNO+(TIME÷24)-LO÷360
+   CALCULATEPLANETS
+   CALCULATESTARS
+   PAD←'00000',⍕I
+   FN←DIR,'/frame_',(¯5↑PAD),'.svg'
+   (⊂FRAMESVG)⎕NPUT FN 1
+ :EndFor
+ ⎕←'Generated ',(⍕NDAYS),' frames in ',DIR

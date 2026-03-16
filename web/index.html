@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STARMAP animation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #0a0a1a; color: #ccc; padding: 2rem; }
+  h1 { font-size: 1.4rem; color: #999; margin-bottom: 1.5rem; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 600px; margin-bottom: 1.5rem; }
+  .field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 0.85rem; color: #888; }
+  input { background: #1a1a2e; border: 1px solid #333; color: #ccc; padding: 0.5rem; font-family: inherit; font-size: 0.95rem; }
+  input:focus { outline: none; border-color: #4fc3f7; }
+  .row { display: flex; gap: 1rem; align-items: end; }
+  button { background: #1a1a2e; border: 1px solid #4fc3f7; color: #4fc3f7; padding: 0.6rem 1.5rem;
+           font-family: inherit; font-size: 0.95rem; cursor: pointer; }
+  button:hover { background: #4fc3f7; color: #0a0a1a; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #status { margin: 1rem 0; color: #888; min-height: 1.5rem; }
+  #status.error { color: #f44; }
+  video { max-width: 100%; background: #000; margin-top: 1rem; display: none; }
+  .help { font-size: 0.75rem; color: #555; margin-top: 0.2rem; }
+</style>
+</head>
+<body>
+
+<h1>STARMAP animation generator</h1>
+
+<div class="form-grid">
+  <div class="field">
+    <label>Start date</label>
+    <input type="date" id="startDate" value="1974-05-15">
+  </div>
+  <div class="field">
+    <label>End date</label>
+    <input type="date" id="endDate" value="1974-06-14">
+  </div>
+  <div class="field">
+    <label>UTC time (hours, decimal)</label>
+    <input type="number" id="time" value="5" min="0" max="24" step="0.5">
+    <span class="help">e.g. 5 = 05:00 UTC = 10 PM PDT</span>
+  </div>
+  <div class="field">
+    <label>Frames per second</label>
+    <input type="number" id="fps" value="4" min="1" max="30" step="1">
+  </div>
+  <div class="field">
+    <label>Latitude</label>
+    <input type="number" id="lat" value="33.767" step="0.001">
+  </div>
+  <div class="field">
+    <label>Longitude (east +, west &minus;)</label>
+    <input type="number" id="long" value="-117.833" step="0.001">
+  </div>
+  <div class="field full">
+    <div class="row">
+      <button id="generate" onclick="generate()">Generate</button>
+    </div>
+  </div>
+</div>
+
+<div id="status"></div>
+<video id="player" controls></video>
+
+<script>
+function parseDate(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  return [m, d, y];
+}
+
+async function generate() {
+  const btn = document.getElementById('generate');
+  const status = document.getElementById('status');
+  const player = document.getElementById('player');
+
+  btn.disabled = true;
+  player.style.display = 'none';
+  status.className = '';
+  status.textContent = 'Generating... this may take a while.';
+
+  const body = {
+    start: parseDate(document.getElementById('startDate').value),
+    end:   parseDate(document.getElementById('endDate').value),
+    time:  parseFloat(document.getElementById('time').value),
+    lat:   parseFloat(document.getElementById('lat').value),
+    long:  parseFloat(document.getElementById('long').value),
+    fps:   parseInt(document.getElementById('fps').value)
+  };
+
+  try {
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const result = await resp.json();
+
+    if (resp.ok && result.url) {
+      status.textContent = 'Done.';
+      player.src = result.url;
+      player.style.display = 'block';
+      player.load();
+    } else {
+      status.className = 'error';
+      status.textContent = 'Error: ' + (result.error || 'Unknown error');
+    }
+  } catch (e) {
+    status.className = 'error';
+    status.textContent = 'Request failed: ' + e.message;
+  }
+
+  btn.disabled = false;
+}
+</script>
+
+</body>
+</html>

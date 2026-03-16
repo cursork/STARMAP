@@ -202,6 +202,9 @@
 
 ⍝ --- Compute final height and wrap ---
  VHEIGHT←TY+PAD
+ :If 2=⎕NC 'PLOTSVG_MINHT'
+   VHEIGHT←VHEIGHT⌈PLOTSVG_MINHT
+ :EndIf
  Z←'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ',(⍕2160+2×PAD),' ',(⍕VHEIGHT),'" width="',(⍕2160+2×PAD),'" height="',(⍕VHEIGHT),'">'
  Z,←'<defs><style>'
  Z,←'text{font-family:monospace;fill:#ccc}'

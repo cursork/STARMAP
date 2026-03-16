@@ -4,6 +4,7 @@
 
 scrap/
 .venv/
+output/
 
 # Yale Bright Star Catalog contents
 yale-catalog/bsc5.html

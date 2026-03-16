@@ -1,0 +1,40 @@
+ Z←FPS MAKEVIDEO DIR;N;CMD;R
+⍝ Convert SVG frames to mp4 video
+⍝ FPS: frames per second
+⍝ DIR: directory containing frame_NNNNN.svg files
+⍝ Returns path to output mp4 (empty string on error)
+
+⍝ Count frames
+ R←⎕SHELL 'ls -1 ',DIR,'/frame_*.svg 2>/dev/null | wc -l'
+ N←⊃2⊃⎕VFI(∊⊃R)~' '
+ :If N=0
+   ⎕←'No SVG frames found in ',DIR
+   Z←''
+   :Return
+ :EndIf
+
+⍝ Convert SVGs to PNGs (parallel)
+ ⎕←'Converting ',(⍕N),' SVGs to PNGs...'
+ CMD←'ls -1 ',DIR,'/frame_*.svg | xargs -P 8 -I {} sh -c ''f="{}"; rsvg-convert -w 2320 "$f" -o "${f%.svg}.png"'''
+ R←⎕SHELL CMD
+ :If 0≠3⊃R
+   ⎕←'Error converting SVGs: ',∊⊃R
+   Z←''
+   :Return
+ :EndIf
+
+⍝ Encode mp4
+ ⎕←'Encoding mp4 at ',(⍕FPS),' fps...'
+ Z←DIR,'/animation.mp4'
+ CMD←'ffmpeg -y -framerate ',(⍕FPS),' -i ',DIR,'/frame_%05d.png'
+ CMD,←' -c:v libx264 -pix_fmt yuv420p'
+ CMD,←' -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2"'
+ CMD,←' ',Z
+ R←⎕SHELL CMD
+ :If 0≠3⊃R
+   ⎕←'Error encoding video'
+   Z←''
+   :Return
+ :EndIf
+
+ ⎕←'Video written to ',Z

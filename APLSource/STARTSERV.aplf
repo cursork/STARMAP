@@ -1,0 +1,7 @@
+ STARTSERV
+⍝ Start the star map animation web server on port 8080
+⍝ Launch:
+⍝   gritt -l -link 'sm:APLSource' -link 'Stark:~/dev/Stark/APLSource' -e 'sm.STARTSERV'
+ HTTP_APP←⎕NEW WebApp (##.Stark.Stark #.sm)
+ HTTP_APP.Start 8080
+ :While 1 ⋄ ⎕DL 3600 ⋄ :EndWhile
