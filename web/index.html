@@ -12,13 +12,19 @@
   .field { display: flex; flex-direction: column; gap: 0.3rem; }
   .field.full { grid-column: 1 / -1; }
   label { font-size: 0.85rem; color: #888; }
-  input { background: #1a1a2e; border: 1px solid #333; color: #ccc; padding: 0.5rem; font-family: inherit; font-size: 0.95rem; }
+  input[type="date"], input[type="number"] {
+    background: #1a1a2e; border: 1px solid #333; color: #ccc;
+    padding: 0.5rem; font-family: inherit; font-size: 0.95rem;
+  }
   input:focus { outline: none; border-color: #4fc3f7; }
-  .row { display: flex; gap: 1rem; align-items: end; }
+  .row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
   button { background: #1a1a2e; border: 1px solid #4fc3f7; color: #4fc3f7; padding: 0.6rem 1.5rem;
            font-family: inherit; font-size: 0.95rem; cursor: pointer; }
   button:hover { background: #4fc3f7; color: #0a0a1a; }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .check-row { display: flex; gap: 1.5rem; align-items: center; margin-top: 0.5rem; }
+  .check-row label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.85rem; color: #888; }
+  .check-row input[type="checkbox"] { accent-color: #4fc3f7; }
   #status { margin: 1rem 0; color: #888; min-height: 1.5rem; }
   #status.error { color: #f44; }
   video { max-width: 100%; background: #000; margin-top: 1rem; display: none; }
@@ -45,7 +51,7 @@
   </div>
   <div class="field">
     <label>Frames per second</label>
-    <input type="number" id="fps" value="4" min="1" max="30" step="1">
+    <input type="number" id="fps" value="15" min="1" max="30" step="1">
   </div>
   <div class="field">
     <label>Latitude</label>
@@ -56,13 +62,21 @@
     <input type="number" id="long" value="-117.833" step="0.001">
   </div>
   <div class="field full">
+    <div class="check-row">
+      <label><input type="checkbox" id="hires"> Large display</label>
+      <label><input type="checkbox" id="skip"> Reduce size (every other day)</label>
+    </div>
+  </div>
+  <div class="field full">
     <div class="row">
-      <button id="generate" onclick="generate()">Generate</button>
+      <button id="genSvg" onclick="generateSVG()">Generate SVG</button>
+      <button id="genMp4" onclick="generateMp4()">Generate .mp4 (slow)</button>
     </div>
   </div>
 </div>
 
 <div id="status"></div>
+<iframe id="svg-player" style="display:none;border:none;background:#0a0a1a;"></iframe>
 <video id="player" controls></video>
 
 <script>
@@ -71,17 +85,8 @@ function parseDate(s) {
   return [m, d, y];
 }
 
-async function generate() {
-  const btn = document.getElementById('generate');
-  const status = document.getElementById('status');
-  const player = document.getElementById('player');
-
-  btn.disabled = true;
-  player.style.display = 'none';
-  status.className = '';
-  status.textContent = 'Generating... this may take a while.';
-
-  const body = {
+function getParams() {
+  return {
     start: parseDate(document.getElementById('startDate').value),
     end:   parseDate(document.getElementById('endDate').value),
     time:  parseFloat(document.getElementById('time').value),
@@ -89,6 +94,73 @@ async function generate() {
     long:  parseFloat(document.getElementById('long').value),
     fps:   parseInt(document.getElementById('fps').value)
   };
+}
+
+function setButtons(disabled) {
+  document.getElementById('genSvg').disabled = disabled;
+  document.getElementById('genMp4').disabled = disabled;
+}
+
+async function generateSVG() {
+  const status = document.getElementById('status');
+  const player = document.getElementById('player');
+  const svgPlayer = document.getElementById('svg-player');
+  player.style.display = 'none';
+  svgPlayer.style.display = 'none';
+  setButtons(true);
+  status.className = '';
+  status.textContent = 'Generating animated SVG...';
+
+  const body = getParams();
+  body.hires = document.getElementById('hires').checked ? 1 : 0;
+  body.skip = document.getElementById('skip').checked ? 2 : 1;
+
+  try {
+    const resp = await fetch('/api/generate-svg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const result = await resp.json();
+    if (resp.ok && result.url) {
+      status.textContent = 'Done.';
+      const hires = document.getElementById('hires').checked;
+      svgPlayer.style.width = hires ? '2320px' : '1160px';
+      svgPlayer.src = result.url;
+      svgPlayer.style.display = 'block';
+      svgPlayer.onload = function() {
+        try {
+          const doc = svgPlayer.contentDocument;
+          const svg = doc.querySelector('svg');
+          if (svg) {
+            const vb = svg.getAttribute('viewBox').split(' ');
+            const aspect = parseFloat(vb[3]) / parseFloat(vb[2]);
+            svgPlayer.style.height = Math.round(parseInt(svgPlayer.style.width) * aspect) + 'px';
+          }
+        } catch(e) { svgPlayer.style.height = '800px'; }
+      };
+    } else {
+      status.className = 'error';
+      status.textContent = 'Error: ' + (result.error || 'Unknown error');
+    }
+  } catch (e) {
+    status.className = 'error';
+    status.textContent = 'Request failed: ' + e.message;
+  }
+  setButtons(false);
+}
+
+async function generateMp4() {
+  const status = document.getElementById('status');
+  const player = document.getElementById('player');
+  const svgPlayer = document.getElementById('svg-player');
+  player.style.display = 'none';
+  svgPlayer.style.display = 'none';
+  setButtons(true);
+  status.className = '';
+  status.textContent = 'Generating mp4... this may take a while.';
+
+  const body = getParams();
 
   try {
     const resp = await fetch('/api/generate', {
@@ -96,9 +168,7 @@ async function generate() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-
     const result = await resp.json();
-
     if (resp.ok && result.url) {
       status.textContent = 'Done.';
       player.src = result.url;
@@ -112,8 +182,7 @@ async function generate() {
     status.className = 'error';
     status.textContent = 'Request failed: ' + e.message;
   }
-
-  btn.disabled = false;
+  setButtons(false);
 }
 </script>
 

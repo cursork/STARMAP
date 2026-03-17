@@ -2,6 +2,17 @@
 
 ## Active tasks
 
+- **Animated SVG feature** (branch `animate`)
+  - JS-animated SVG with playback controls (play/pause, scrub, speed 0.25x–8x)
+  - Stars computed in JS (ported sky math), planets pre-computed in APL as JSON
+  - Bright star table: 2-column layout, below-horizon rows dimmed not hidden
+  - Planet table: below-horizon rows dimmed not hidden
+  - Pure SVG controls (no foreignObject — broken with viewBox scaling)
+  - Options: `OPTS←FPS [HIRES [SKIP]]` — frame skip, display size
+  - Web UI: two buttons (Generate SVG / Generate .mp4), checkboxes for large display and every-other-day
+  - 10 years = 1.4MB (skip 1), 743KB (skip 2)
+  - All 9 tests pass
+  - TODO: verify star positions match PLOTSVG output (visual comparison)
 - Continue proofreading transcribed book text
 - Clean up debug scripts (`debug_skypos*.py`, `debug_final.py`) from sky position investigation
 
@@ -58,6 +69,32 @@ None currently.
 ---
 
 ## Session log
+
+### 2026-03-17 session 2 (animated SVG polish + web UI)
+- Bright star table: 2-column layout (11 rows each), below-horizon rows dimmed (#555) not hidden
+- Planet table: below-horizon rows dimmed (same pattern as bright stars)
+- Replaced foreignObject controls with pure SVG elements (foreignObject + viewBox scaling = broken mouse mapping)
+  - SVG scrub bar: rect track + fill + circle thumb, click-to-seek and drag via `getScreenCTM().inverse()`
+  - SVG speed buttons: rect+text groups
+  - Two-line layout: scrub bar on top, speed controls + date label below
+- Added OPTS left arg: `FPS [HIRES [SKIP]]` — frame skipping (every Nth day), display size
+- Removed explicit SVG width/height (responsive viewBox)
+- WebApp: added `/api/generate-svg` POST + `/api/svg/{id}` GET endpoints
+- Web UI: two buttons (Generate SVG / Generate .mp4), checkboxes for large display and every-other-day
+- iframe embedding for SVG output, auto-sizing via viewBox aspect ratio
+- All 9 tests pass
+
+### 2026-03-17 session 1 (animated SVG)
+- Branch `animate`
+- Created ANIMATEDSVG.aplf: JS-animated SVG generator
+  - Stars computed client-side (ported PRECESS/SKYPOS/PROJECTION to JS)
+  - Planet data pre-computed in APL, embedded as JSON
+  - `FJS` helper formats APL numbers for JS (replaces `¯` with `-` at source)
+  - `hm()` JS function displays `¯` for negative numbers in tables
+- Created TEST_ANIMATEDSVG.aplf (passes)
+- Bumped frame padding from 4 to 5 digits (supports 99,999 frames)
+- Parallelised rsvg-convert in MAKEVIDEO via `xargs -P 8`
+- All 9 tests pass
 
 ### 2026-03-02 (CHANGES.md audit)
 - Audited CHANGES.md against actual source files, found and corrected several discrepancies

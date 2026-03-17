@@ -20,7 +20,9 @@
       router.ThreadMode←'DEBUG'
       '/' router.Get 'ServeUI'
       '/api/generate' router.Post 'Generate'
+      '/api/generate-svg' router.Post 'GenerateSVG'
       '/api/video/{id}/animation.mp4' router.Get 'ServeVideo'
+      '/api/svg/{id}' router.Get 'ServeSVG'
     ∇
 
     ∇ Start port
@@ -87,6 +89,49 @@
       :Else
           req.Fail 404
           result←(detail: 'Video not found')
+      :EndIf
+    ∇
+
+    ∇ result←GenerateSVG req;body;START;END;T;LA;LO;FPS;HIRES;SKIP;OPTS;SVG;ID;FN
+      :Access Public
+      :Trap 0
+          body←req.Payload
+          START←body.start
+          END←body.end
+          T←body.time
+          LA←body.lat
+          LO←body.long
+          FPS←body.fps
+          HIRES←body.hires
+          SKIP←body.skip
+          OPTS←FPS HIRES SKIP
+          SVG←OPTS ns.ANIMATEDSVG START END T LA LO
+          ID←(∊⊃⎕SHELL 'date +%Y%m%d%H%M%S')~⎕UCS 10 13 32
+          FN←root,'/output/',ID,'.svg'
+          (⊂SVG)⎕NPUT FN 1
+          result←(url: '/api/svg/',ID)
+      :Else
+          req.Fail 400
+          result←(error: ⎕DMX.Message)
+      :EndTrap
+    ∇
+
+    ∇ result←ServeSVG req;id;path
+      :Access Public
+      id←req.PathParams.id
+      :If ∨/'..'⍷id
+          req.Fail 403
+          result←(error: 'Forbidden')
+          :Return
+      :EndIf
+      path←root,'/output/',id,'.svg'
+      :If ⎕NEXISTS path
+          'Content-Type' req.SetHeader 'image/svg+xml; charset=utf-8'
+          req.Response.Payload←'' path
+          result←⍬
+      :Else
+          req.Fail 404
+          result←(detail: 'SVG not found')
       :EndIf
     ∇
 

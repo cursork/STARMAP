@@ -1,17 +1,27 @@
- Z←FPS ANIMATEDSVG ARGS;START;END;T;LA;LO;JD1;JD2;NDAYS;I;S;FJ;FJS;CX;CY;R;PAD;FMT;NSTARS;NBRIGHT;BRIGHTIDX;NPI;ALLPC;PLAN_PX;PLAN_PY;PLAN_VIS;PLAN_RAH;PLAN_RAM;PLAN_DEC;PLAN_ALT;PLAN_AZ;PLAN_MX;PLAN_MY;PHASES;PCHARS;NAMES;NM;BN;TY;VHEIGHT;SR;COL;LATD;LATM;NS;LONGD;LONGM;EW;H;AP;MN2;PLANJSON
+ Z←OPTS ANIMATEDSVG ARGS;START;END;T;LA;LO;JD1;JD2;NDAYS;I;S;FJ;FJS;CX;CY;R;PAD;FMT;NSTARS;NBRIGHT;BRIGHTIDX;NPI;ALLPC;PLAN_PX;PLAN_PY;PLAN_VIS;PLAN_RAH;PLAN_RAM;PLAN_DEC;PLAN_ALT;PLAN_AZ;PLAN_MX;PLAN_MY;PHASES;PCHARS;NAMES;NM;BN;TY;VHEIGHT;SR;COL;LATD;LATM;NS;LONGD;LONGM;EW;H;AP;MN2;PLANJSON;NCOL;FPS;HIRES;SKIP;NFRAMES
 ⍝ Generate animated SVG with JavaScript-driven animation
-⍝ FPS: playback frames per second
+⍝ OPTS: FPS [HIRES [SKIP]]
+⍝   FPS: playback frames per second
+⍝   HIRES: 1=full-size display (default 0=half-size)
+⍝   SKIP: days between frames (default 1=every day, 2=every other day)
 ⍝ ARGS: (M D Y)(M D Y) TIME LAT LONG
 ⍝ Returns character vector containing complete animated SVG
 ⍝
 ⍝ Stars are computed in JavaScript (ported sky math).
 ⍝ Planet positions are pre-computed in APL and embedded as JSON.
 
+⍝ === PARSE OPTIONS ===
+ OPTS←,OPTS
+ FPS←⊃OPTS
+ :If 1<≢OPTS ⋄ HIRES←OPTS[2] ⋄ :Else ⋄ HIRES←0 ⋄ :EndIf
+ :If 2<≢OPTS ⋄ SKIP←OPTS[3] ⋄ :Else ⋄ SKIP←1 ⋄ :EndIf
+
 ⍝ === PARSE ARGS ===
  START END T LA LO←ARGS
  JD1←JNU START
  JD2←JNU END
  NDAYS←1+JD2-JD1
+ NFRAMES←⌈NDAYS÷SKIP
 
 ⍝ Map constants (same as PLOTSVG)
  PAD←80
@@ -26,21 +36,21 @@
  NBRIGHT←≢BRIGHTIDX
 
 ⍝ === COLLECT PLANET DATA ===
- PLAN_PX←NDAYS 11⍴0
- PLAN_PY←NDAYS 11⍴0
- PLAN_VIS←NDAYS 11⍴0
- PLAN_RAH←NDAYS 11⍴0
- PLAN_RAM←NDAYS 11⍴0
- PLAN_DEC←NDAYS 11⍴0
- PLAN_ALT←NDAYS 11⍴0
- PLAN_AZ←NDAYS 11⍴0
- PLAN_MX←NDAYS 11⍴0
- PLAN_MY←NDAYS 11⍴0
- PHASES←NDAYS⍴0
+ PLAN_PX←NFRAMES 11⍴0
+ PLAN_PY←NFRAMES 11⍴0
+ PLAN_VIS←NFRAMES 11⍴0
+ PLAN_RAH←NFRAMES 11⍴0
+ PLAN_RAM←NFRAMES 11⍴0
+ PLAN_DEC←NFRAMES 11⍴0
+ PLAN_ALT←NFRAMES 11⍴0
+ PLAN_AZ←NFRAMES 11⍴0
+ PLAN_MX←NFRAMES 11⍴0
+ PLAN_MY←NFRAMES 11⍴0
+ PHASES←NFRAMES⍴0
 
- ⎕←'Computing ',(⍕NDAYS),' frames...'
- :For I :In ⍳NDAYS
-   STATEDDAYNO←JD1+I-1
+ ⎕←'Computing ',(⍕NFRAMES),' frames (skip ',(⍕SKIP),')...'
+ :For I :In ⍳NFRAMES
+   STATEDDAYNO←JD1+(I-1)×SKIP
    STATEDTIME←T
    LAT←LA ⋄ LONG←LO
    TIME←LO TIMEADJUST T
@@ -103,15 +113,15 @@
  PLANJSON,←'"phase":[',(FJ PHASES),']'
 
 ⍝ === BUILD SVG ===
-⍝ Compute total height: planet table + 22 bright star rows
+⍝ Compute total height: planet table + 22 bright star rows + controls
  TY←PAD+2160+120
  TY←TY+50+8+32+(11×34)+10+60
- TY←TY+50+8+32+(NBRIGHT×34)
+ TY←TY+50+8+32+((⌈NBRIGHT÷2)×34)
+ TY←TY+20+80
  VHEIGHT←TY+PAD
 
-⍝ SVG header
- Z←'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ',(⍕2160+2×PAD),' ',(⍕VHEIGHT),'"'
- Z,←' width="',(⍕2160+2×PAD),'" height="',(⍕VHEIGHT),'">'
+⍝ SVG header (no explicit width/height — SVG scales to container)
+ Z←'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ',(⍕2160+2×PAD),' ',(⍕VHEIGHT),'">'
  Z,←'<defs><style>'
  Z,←'text{font-family:monospace;fill:#ccc}'
  Z,←'.bright{fill:#ffd700}'
@@ -126,6 +136,12 @@
  Z,←'.table-text{font-size:26px;fill:#999}'
  Z,←'.table-hdr-r{font-size:26px;fill:#bbb;text-anchor:end}'
  Z,←'.table-r{font-size:26px;fill:#999;text-anchor:end}'
+ Z,←'.bst-row text{font-size:26px;fill:#999}'
+ Z,←'.bst-val{text-anchor:end}'
+ Z,←'.bst-row.dim text{fill:#555}'
+ Z,←'.pt-row text{font-size:26px;fill:#999}'
+ Z,←'.pt-val{text-anchor:end}'
+ Z,←'.pt-row.dim text{fill:#555}'
  Z,←'</style></defs>'
 
 ⍝ Background
@@ -203,16 +219,18 @@
  TY←TY+32
  Z,←'</g>'
 
-⍝ Planet table rows (JS updates values)
+⍝ Planet table rows (JS updates values and dims when below horizon)
  :For I :In ⍳11
-   Z,←'<text class="table-text" x="',(⍕PAD+60),'" y="',(⍕TY),'">',PCHARS[I],' ',(⊃NAMES[I]),'</text>'
-   Z,←'<text class="table-r" id="pt-rah-',(⍕I-1),'" x="',(⍕PAD+340),'" y="',(⍕TY),'"> </text>'
-   Z,←'<text class="table-r" id="pt-ram-',(⍕I-1),'" x="',(⍕PAD+440),'" y="',(⍕TY),'"> </text>'
-   Z,←'<text class="table-r" id="pt-dec-',(⍕I-1),'" x="',(⍕PAD+560),'" y="',(⍕TY),'"> </text>'
-   Z,←'<text class="table-r" id="pt-alt-',(⍕I-1),'" x="',(⍕PAD+680),'" y="',(⍕TY),'"> </text>'
-   Z,←'<text class="table-r" id="pt-az-',(⍕I-1),'" x="',(⍕PAD+790),'" y="',(⍕TY),'"> </text>'
-   Z,←'<text class="table-r" id="pt-mx-',(⍕I-1),'" x="',(⍕PAD+920),'" y="',(⍕TY),'"> </text>'
-   Z,←'<text class="table-r" id="pt-my-',(⍕I-1),'" x="',(⍕PAD+1050),'" y="',(⍕TY),'"> </text>'
+   Z,←'<g class="pt-row" id="pt-row-',(⍕I-1),'">'
+   Z,←'<text x="',(⍕PAD+60),'" y="',(⍕TY),'">',PCHARS[I],' ',(⊃NAMES[I]),'</text>'
+   Z,←'<text class="pt-val" id="pt-rah-',(⍕I-1),'" x="',(⍕PAD+340),'" y="',(⍕TY),'"> </text>'
+   Z,←'<text class="pt-val" id="pt-ram-',(⍕I-1),'" x="',(⍕PAD+440),'" y="',(⍕TY),'"> </text>'
+   Z,←'<text class="pt-val" id="pt-dec-',(⍕I-1),'" x="',(⍕PAD+560),'" y="',(⍕TY),'"> </text>'
+   Z,←'<text class="pt-val" id="pt-alt-',(⍕I-1),'" x="',(⍕PAD+680),'" y="',(⍕TY),'"> </text>'
+   Z,←'<text class="pt-val" id="pt-az-',(⍕I-1),'" x="',(⍕PAD+790),'" y="',(⍕TY),'"> </text>'
+   Z,←'<text class="pt-val" id="pt-mx-',(⍕I-1),'" x="',(⍕PAD+920),'" y="',(⍕TY),'"> </text>'
+   Z,←'<text class="pt-val" id="pt-my-',(⍕I-1),'" x="',(⍕PAD+1050),'" y="',(⍕TY),'"> </text>'
+   Z,←'</g>'
    TY←TY+34
  :EndFor
 
@@ -221,32 +239,66 @@
  Z,←'<text class="table-text" id="moon-phase" x="',(⍕PAD+60),'" y="',(⍕TY),'"> </text>'
  TY←TY+60
 
-⍝ === BRIGHT STAR TABLE ===
+⍝ === BRIGHT STAR TABLE (two columns, dim below-horizon) ===
+ NCOL←⌈NBRIGHT÷2
  Z,←'<text class="table-header" x="',(⍕PAD+1080),'" y="',(⍕TY),'">BRIGHT STARS</text>'
  TY←TY+50
+⍝ Column headers (left and right)
  Z,←'<g class="table-text">'
  Z,←'<text x="',(⍕PAD+60),'" y="',(⍕TY),'">STAR</text>'
  Z,←'<text class="table-hdr-r" x="',(⍕PAD+340),'" y="',(⍕TY),'">ALT</text>'
  Z,←'<text class="table-hdr-r" x="',(⍕PAD+440),'" y="',(⍕TY),'">AZ</text>'
  Z,←'<text class="table-hdr-r" x="',(⍕PAD+560),'" y="',(⍕TY),'">MAP X</text>'
  Z,←'<text class="table-hdr-r" x="',(⍕PAD+680),'" y="',(⍕TY),'">MAP Y</text>'
+ Z,←'<text x="',(⍕PAD+1140),'" y="',(⍕TY),'">STAR</text>'
+ Z,←'<text class="table-hdr-r" x="',(⍕PAD+1420),'" y="',(⍕TY),'">ALT</text>'
+ Z,←'<text class="table-hdr-r" x="',(⍕PAD+1520),'" y="',(⍕TY),'">AZ</text>'
+ Z,←'<text class="table-hdr-r" x="',(⍕PAD+1640),'" y="',(⍕TY),'">MAP X</text>'
+ Z,←'<text class="table-hdr-r" x="',(⍕PAD+1760),'" y="',(⍕TY),'">MAP Y</text>'
  TY←TY+8
  Z,←'<line x1="',(⍕PAD+40),'" y1="',(⍕TY),'" x2="',(⍕PAD+720),'" y2="',(⍕TY),'" stroke="#555" stroke-width="1"/>'
+ Z,←'<line x1="',(⍕PAD+1120),'" y1="',(⍕TY),'" x2="',(⍕PAD+1800),'" y2="',(⍕TY),'" stroke="#555" stroke-width="1"/>'
  TY←TY+32
  Z,←'</g>'
 
-⍝ Bright star table rows (all 22, JS toggles visibility)
- :For I :In ⍳NBRIGHT
+⍝ Bright star rows: left column (0..NCOL-1), right column (NCOL..NBRIGHT-1)
+ :For I :In ⍳NCOL
    NM←⊃BN[I]
-   Z,←'<g id="bst-row-',(⍕I-1),'">'
-   Z,←'<text class="table-text" x="',(⍕PAD+60),'" y="',(⍕TY),'">',NM,'</text>'
-   Z,←'<text class="table-r" id="bst-alt-',(⍕I-1),'" x="',(⍕PAD+340),'" y="',(⍕TY),'"> </text>'
-   Z,←'<text class="table-r" id="bst-az-',(⍕I-1),'" x="',(⍕PAD+440),'" y="',(⍕TY),'"> </text>'
-   Z,←'<text class="table-r" id="bst-mx-',(⍕I-1),'" x="',(⍕PAD+560),'" y="',(⍕TY),'"> </text>'
-   Z,←'<text class="table-r" id="bst-my-',(⍕I-1),'" x="',(⍕PAD+680),'" y="',(⍕TY),'"> </text>'
+   Z,←'<g class="bst-row" id="bst-row-',(⍕I-1),'">'
+   Z,←'<text x="',(⍕PAD+60),'" y="',(⍕TY),'">',NM,'</text>'
+   Z,←'<text class="bst-val" id="bst-alt-',(⍕I-1),'" x="',(⍕PAD+340),'" y="',(⍕TY),'"> </text>'
+   Z,←'<text class="bst-val" id="bst-az-',(⍕I-1),'" x="',(⍕PAD+440),'" y="',(⍕TY),'"> </text>'
+   Z,←'<text class="bst-val" id="bst-mx-',(⍕I-1),'" x="',(⍕PAD+560),'" y="',(⍕TY),'"> </text>'
+   Z,←'<text class="bst-val" id="bst-my-',(⍕I-1),'" x="',(⍕PAD+680),'" y="',(⍕TY),'"> </text>'
    Z,←'</g>'
+   :If NBRIGHT≥I+NCOL
+     NM←⊃BN[I+NCOL]
+     Z,←'<g class="bst-row" id="bst-row-',(⍕I+NCOL-1),'">'
+     Z,←'<text x="',(⍕PAD+1140),'" y="',(⍕TY),'">',NM,'</text>'
+     Z,←'<text class="bst-val" id="bst-alt-',(⍕I+NCOL-1),'" x="',(⍕PAD+1420),'" y="',(⍕TY),'"> </text>'
+     Z,←'<text class="bst-val" id="bst-az-',(⍕I+NCOL-1),'" x="',(⍕PAD+1520),'" y="',(⍕TY),'"> </text>'
+     Z,←'<text class="bst-val" id="bst-mx-',(⍕I+NCOL-1),'" x="',(⍕PAD+1640),'" y="',(⍕TY),'"> </text>'
+     Z,←'<text class="bst-val" id="bst-my-',(⍕I+NCOL-1),'" x="',(⍕PAD+1760),'" y="',(⍕TY),'"> </text>'
+     Z,←'</g>'
+   :EndIf
    TY←TY+34
  :EndFor
+
+⍝ === PLAYBACK CONTROLS (two lines: scrub bar, then date + speed) ===
+ TY←TY+30
+⍝ Line 1: play button + scrub bar
+ Z,←'<text id="play-btn" x="',(⍕PAD),'" y="',(⍕TY),'" font-size="32" fill="#ccc" style="cursor:pointer">&#x23F8;</text>'
+ Z,←'<rect id="scrub-track" x="',(⍕PAD+60),'" y="',(⍕TY-14),'" width="2060" height="8" rx="4" fill="#333" style="cursor:pointer"/>'
+ Z,←'<rect id="scrub-fill" x="',(⍕PAD+60),'" y="',(⍕TY-14),'" width="0" height="8" rx="4" fill="#4fc3f7" style="pointer-events:none"/>'
+ Z,←'<circle id="scrub-thumb" cx="',(⍕PAD+60),'" cy="',(⍕TY-10),'" r="10" fill="#ccc" style="cursor:pointer"/>'
+⍝ Line 2: speed controls (left) + date label (right)
+ TY←TY+40
+ Z,←'<g id="spd-dn" style="cursor:pointer"><rect x="',(⍕PAD),'" y="',(⍕TY-24),'" width="36" height="32" rx="4" fill="#333" stroke="#555" stroke-width="1"/>'
+ Z,←'<text x="',(⍕PAD+18),'" y="',(⍕TY),'" font-size="26" fill="#ccc" text-anchor="middle">-</text></g>'
+ Z,←'<text id="speed-label" x="',(⍕PAD+70),'" y="',(⍕TY),'" font-size="24" fill="#999" text-anchor="middle">1x</text>'
+ Z,←'<g id="spd-up" style="cursor:pointer"><rect x="',(⍕PAD+104),'" y="',(⍕TY-24),'" width="36" height="32" rx="4" fill="#333" stroke="#555" stroke-width="1"/>'
+ Z,←'<text x="',(⍕PAD+122),'" y="',(⍕TY),'" font-size="26" fill="#ccc" text-anchor="middle">+</text></g>'
+ Z,←'<text id="frame-label" x="',(⍕PAD+2120),'" y="',(⍕TY),'" font-size="24" fill="#999" text-anchor="end"> </text>'
 
 ⍝ === JAVASCRIPT ===
  Z,←'<script type="text/javascript"><![CDATA['
@@ -255,7 +307,7 @@
 ⍝ Constants
  Z,←'const PI=Math.PI,EQUINOX=2441762.5,YRLENGTH=365.24219,AXITILT=23.4428,CATEPOCH=2451545;'
  Z,←'const CX=1160,CY=1160,R=1080;'
- Z,←'const FPS=',(FJS FPS),',NFRAMES=',(FJS NDAYS),',JD1=',(FJS JD1),';'
+ Z,←'const FPS=',(FJS FPS),',NFRAMES=',(FJS NFRAMES),',JD1=',(FJS JD1),',SKIP=',(FJS SKIP),';'
  Z,←'const LAT=',(FJS LA),',LONG=',(FJS LO),',TIME_UTC=',(FJS T),';'
 
 ⍝ Star catalog
@@ -300,7 +352,7 @@
 
 ⍝ Compute and render a frame
  Z,←'function renderFrame(fi){'
- Z,←'const jd=JD1+fi;'
+ Z,←'const jd=JD1+fi*SKIP;'
  Z,←'const localTime=TIME_UTC+LONG/15;'
  Z,←'const date=jd+localTime/24-LONG/360;'
  Z,←'const interval=date-CATEPOCH;'
@@ -361,19 +413,19 @@
  Z,←', ON "+dn+" "+mdy[2]+"/"+mdy[0]+"/"+mdy[1]+"'
  Z,←' AT ',(⍕⌊H),':',MN2,' ',AP,'";'
 
-⍝ Planet table values
+⍝ Planet table values (always show, dim when below horizon)
  Z,←'for(let i=0;i<np;i++){'
+ Z,←'const row=document.getElementById("pt-row-"+i);'
+ Z,←'row.setAttribute("class",PD.vis[i][fi]?"pt-row":"pt-row dim");'
  Z,←'document.getElementById("pt-rah-"+i).textContent=hm(PD.rah[i][fi]);'
  Z,←'document.getElementById("pt-ram-"+i).textContent=hm(PD.ram[i][fi]);'
  Z,←'document.getElementById("pt-dec-"+i).textContent=hm(PD.dec[i][fi]);'
- Z,←'if(PD.vis[i][fi]){'
  Z,←'document.getElementById("pt-alt-"+i).textContent=hm(PD.alt[i][fi]);'
  Z,←'document.getElementById("pt-az-"+i).textContent=hm(PD.az[i][fi]);'
+ Z,←'if(PD.vis[i][fi]){'
  Z,←'document.getElementById("pt-mx-"+i).textContent=hm(PD.mx[i][fi]);'
  Z,←'document.getElementById("pt-my-"+i).textContent=hm(PD.my[i][fi]);'
  Z,←'}else{'
- Z,←'document.getElementById("pt-alt-"+i).textContent="";'
- Z,←'document.getElementById("pt-az-"+i).textContent="";'
  Z,←'document.getElementById("pt-mx-"+i).textContent="";'
  Z,←'document.getElementById("pt-my-"+i).textContent="";}}'
 
@@ -382,33 +434,86 @@
  Z,←'const wx=ph>0.5?"WANING":"WAXING";'
  Z,←'document.getElementById("moon-phase").textContent="MOON PHASE "+illu+" "+wx;'
 
-⍝ Bright star table (from JS-computed positions)
+⍝ Bright star table (all stars, dim below-horizon)
  Z,←'for(let i=0;i<BRIGHT_IDX.length;i++){'
  Z,←'const si=BRIGHT_IDX[i],row=document.getElementById("bst-row-"+i);'
- Z,←'const sel=document.getElementById("s"+si);'
- Z,←'if(sel.getAttribute("visibility")==="hidden"){'
- Z,←'row.setAttribute("visibility","hidden");'
- Z,←'}else{'
- Z,←'row.setAttribute("visibility","visible");'
  Z,←'const vr=vm(sv[si],combined);'
  Z,←'const alt=deg(Math.asin(clamp(vr[1],-1,1)));'
  Z,←'const s2=-Math.sign(vr[2]);'
  Z,←'const xy2=Math.sqrt(vr[0]*vr[0]+vr[2]*vr[2]);'
  Z,←'let az2=0;if(xy2>1e-10){const ca=clamp(-vr[0]/xy2,-1,1);az2=(s2<=0?360:0)+s2*deg(Math.acos(ca));}'
- Z,←'const pr2=Math.tan(rad(90-alt)/2),ar2=rad(az2);'
- Z,←'const mx=-pr2*Math.sin(ar2),my=pr2*Math.cos(ar2);'
+ Z,←'row.setAttribute("class",alt>=0?"bst-row":"bst-row dim");'
  Z,←'document.getElementById("bst-alt-"+i).textContent=hm(Math.round(alt));'
  Z,←'document.getElementById("bst-az-"+i).textContent=hm(Math.round(az2));'
+ Z,←'if(alt>=0){'
+ Z,←'const pr2=Math.tan(rad(90-alt)/2),ar2=rad(az2);'
+ Z,←'const mx=-pr2*Math.sin(ar2),my=pr2*Math.cos(ar2);'
  Z,←'document.getElementById("bst-mx-"+i).textContent=hm(Math.round(mx*100)/100);'
  Z,←'document.getElementById("bst-my-"+i).textContent=hm(Math.round(my*100)/100);'
- Z,←'}}'
+ Z,←'}else{'
+ Z,←'document.getElementById("bst-mx-"+i).textContent="";'
+ Z,←'document.getElementById("bst-my-"+i).textContent="";}}'
 
  Z,←'}'  ⍝ end renderFrame
 
-⍝ Animation loop
- Z,←'let frame=0;'
- Z,←'renderFrame(0);'
- Z,←'if(NFRAMES>1){const iv=setInterval(()=>{frame++;if(frame>=NFRAMES){clearInterval(iv);return;}renderFrame(frame);},1000/FPS);}'
+⍝ Playback state
+ Z,←'let frame=0,playing=true,speed=1,animId=null,lastTime=0;'
+
+⍝ Playback controls (SVG elements)
+ Z,←'const scrubTrack=document.getElementById("scrub-track");'
+ Z,←'const scrubFill=document.getElementById("scrub-fill");'
+ Z,←'const scrubThumb=document.getElementById("scrub-thumb");'
+ Z,←'const frameLabel=document.getElementById("frame-label");'
+ Z,←'const playBtn=document.getElementById("play-btn");'
+ Z,←'const speedLabel=document.getElementById("speed-label");'
+ Z,←'const TRACK_X=',(FJS PAD+60),',TRACK_W=2060;'
+ Z,←'const svgEl=document.querySelector("svg");'
+
+⍝ Convert mouse event to SVG x coordinate
+ Z,←'function svgX(e){const p=svgEl.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svgEl.getScreenCTM().inverse()).x;}'
+
+⍝ Set frame from SVG x position
+ Z,←'function scrubTo(x){const f=Math.round(((x-TRACK_X)/TRACK_W)*(NFRAMES-1));frame=Math.max(0,Math.min(NFRAMES-1,f));renderFrame(frame);updateUI();}'
+
+ Z,←'function updateUI(){'
+ Z,←'const frac=frame/(NFRAMES-1);'
+ Z,←'scrubFill.setAttribute("width",Math.round(TRACK_W*frac));'
+ Z,←'scrubThumb.setAttribute("cx",Math.round(TRACK_X+TRACK_W*frac));'
+ Z,←'const jd=JD1+frame*SKIP,mdy=jdToDate(jd);'
+ Z,←'frameLabel.textContent=mdy[2]+"/"+mdy[0]+"/"+mdy[1]+" ("+frame+"/"+NFRAMES+")";'
+ Z,←'}'
+
+ Z,←'function step(ts){'
+ Z,←'if(!playing){animId=null;return;}'
+ Z,←'if(!lastTime)lastTime=ts;'
+ Z,←'const elapsed=ts-lastTime;'
+ Z,←'if(elapsed>=1000/(FPS*speed)){'
+ Z,←'lastTime=ts;'
+ Z,←'frame++;if(frame>=NFRAMES){frame=0;}'
+ Z,←'renderFrame(frame);updateUI();}'
+ Z,←'animId=requestAnimationFrame(step);}'
+
+ Z,←'function togglePlay(){'
+ Z,←'playing=!playing;'
+ Z,←'playBtn.textContent=playing?"\u23F8":"\u25B6";'
+ Z,←'if(playing){lastTime=0;animId=requestAnimationFrame(step);}}'
+
+ Z,←'function setSpeed(s){speed=s;speedLabel.textContent=s+"x";}'
+
+⍝ Scrub: click on track, drag thumb
+ Z,←'let dragging=false;'
+ Z,←'scrubTrack.addEventListener("mousedown",e=>{playing=false;playBtn.textContent="\u25B6";dragging=true;scrubTo(svgX(e));});'
+ Z,←'scrubThumb.addEventListener("mousedown",e=>{playing=false;playBtn.textContent="\u25B6";dragging=true;e.preventDefault();});'
+ Z,←'document.addEventListener("mousemove",e=>{if(dragging)scrubTo(svgX(e));});'
+ Z,←'document.addEventListener("mouseup",()=>{dragging=false;});'
+
+ Z,←'playBtn.addEventListener("click",togglePlay);'
+ Z,←'document.getElementById("spd-dn").addEventListener("click",()=>{const s=[0.25,0.5,1,2,4,8];let i=s.indexOf(speed);if(i>0)setSpeed(s[i-1]);});'
+ Z,←'document.getElementById("spd-up").addEventListener("click",()=>{const s=[0.25,0.5,1,2,4,8];let i=s.indexOf(speed);if(i<s.length-1)setSpeed(s[i+1]);});'
+
+⍝ Start
+ Z,←'renderFrame(0);updateUI();'
+ Z,←'animId=requestAnimationFrame(step);'
 
  Z,←'})();'
  Z,←']]></script>'
