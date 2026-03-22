@@ -1,4 +1,4 @@
- Z←OPTS ANIMATEDSVG ARGS;START;END;T;LA;LO;JD1;JD2;NDAYS;I;S;FJ;FJS;CX;CY;R;PAD;FMT;NSTARS;NBRIGHT;BRIGHTIDX;NPI;ALLPC;PLAN_PX;PLAN_PY;PLAN_VIS;PLAN_RAH;PLAN_RAM;PLAN_DEC;PLAN_ALT;PLAN_AZ;PLAN_MX;PLAN_MY;PHASES;PCHARS;NAMES;NM;BN;TY;VHEIGHT;SR;COL;LATD;LATM;NS;LONGD;LONGM;EW;H;AP;MN2;PLANJSON;NCOL;FPS;HIRES;SKIP;NFRAMES
+ Z←OPTS ANIMATEDSVG ARGS;START;END;T;LA;LO;JD1;JD2;NDAYS;I;S;FJ;FJS;CX;CY;R;PAD;FMT;NSTARS;NBRIGHT;BRIGHTIDX;NPI;ALLPC;PLAN_PX;PLAN_PY;PLAN_VIS;PLAN_RAH;PLAN_RAM;PLAN_DEC;PLAN_ALT;PLAN_AZ;PLAN_MX;PLAN_MY;PHASES;PCHARS;NAMES;NM;BN;TY;VHEIGHT;SR;COL;LATD;LATM;NS;LONGD;LONGM;EW;H;AP;MN2;PLANJSON;NCOL;FPS;HIRES;SKIP;NFRAMES;CDATA;CLPAIRS;NLINES;CD;CDNAME;CDPAIRS
 ⍝ Generate animated SVG with JavaScript-driven animation
 ⍝ OPTS: FPS [HIRES [SKIP]]
 ⍝   FPS: playback frames per second
@@ -34,6 +34,11 @@
  NSTARS←⊃⍴STARS
  BRIGHTIDX←⍸BRIGHT
  NBRIGHT←≢BRIGHTIDX
+
+⍝ Constellation line data — flatten all pairs into one matrix
+ CDATA←CONSTELLATIONS
+ CLPAIRS←⊃⍪/{2⊃⍵}¨CDATA
+ NLINES←⊃⍴CLPAIRS
 
 ⍝ === COLLECT PLANET DATA ===
  PLAN_PX←NFRAMES 11⍴0
@@ -142,6 +147,9 @@
  Z,←'.pt-row text{font-size:26px;fill:#999}'
  Z,←'.pt-val{text-anchor:end}'
  Z,←'.pt-row.dim text{fill:#555}'
+ Z,←'.bright,.faint{cursor:pointer;stroke:transparent;stroke-width:16;pointer-events:all}'
+ Z,←'#tooltip rect{fill:#1a1a2e;stroke:#4fc3f7;stroke-width:1}'
+ Z,←'#tooltip text{font-family:monospace}'
  Z,←'</style></defs>'
 
 ⍝ Background
@@ -176,6 +184,9 @@
  Z,←'<text x="350" y="6" fill="#555">— horizon</text>'
  Z,←'</g>'
 
+⍝ Constellation lines (drawn by JS on hover, behind stars)
+ Z,←'<path id="const-path" d="" fill="none" stroke="#446" stroke-width="1.5" visibility="hidden"/>'
+
 ⍝ === STAR ELEMENTS (JS updates cx, cy, visibility) ===
  :For I :In ⍳NSTARS
    :If BRIGHT[I]
@@ -197,9 +208,19 @@
  PCHARS←11↑'☾☉☿♀♂♃♄⛢♆♇☄'
  NAMES←11↑PLANETNAMES
  :For I :In ⍳11
-   Z,←'<text class="planet" id="p',(⍕I-1),'" x="0" y="0" visibility="hidden">',PCHARS[I],'</text>'
-   Z,←'<text class="planet-label" id="plbl',(⍕I-1),'" x="0" y="0" visibility="hidden">',(⊃NAMES[I]),'</text>'
+   Z,←'<text class="planet" id="p',(⍕I-1),'" x="0" y="0" visibility="hidden" style="cursor:pointer">',PCHARS[I],'</text>'
+   Z,←'<text class="planet-label" id="plbl',(⍕I-1),'" x="0" y="0" visibility="hidden" style="pointer-events:none">',(⊃NAMES[I]),'</text>'
  :EndFor
+
+⍝ === STAR INFO TOOLTIP (hidden, positioned by JS) ===
+ Z,←'<g id="tooltip" visibility="hidden">'
+ Z,←'<rect id="tt-bg" x="0" y="0" width="340" height="116" rx="8"/>'
+ Z,←'<circle id="tt-dot" cx="22" cy="24" r="0" fill="#ffd700"/>'
+ Z,←'<text id="tt-name" x="40" y="32" font-size="26" fill="#ccc"></text>'
+ Z,←'<text id="tt-const" x="22" y="60" font-size="22" fill="#888"></text>'
+ Z,←'<text id="tt-radec" x="22" y="84" font-size="20" fill="#666"></text>'
+ Z,←'<text id="tt-altaz" x="22" y="106" font-size="20" fill="#666"></text>'
+ Z,←'</g>'
 
 ⍝ === PLANET TABLE ===
  TY←PAD+2160+120
@@ -320,6 +341,32 @@
 ⍝ Planet data
  Z,←'const PD={',(PLANJSON),'};'
 
+⍝ Constellation line pairs grouped by constellation (0-based star indices)
+ Z,←'const CG={'
+ :For I :In ⍳≢CDATA
+   CD←I⊃CDATA ⋄ CDNAME←1⊃CD ⋄ CDPAIRS←2⊃CD
+   Z,←'"',CDNAME,'":[',(1↓∊',',¨{'[',(FJ ⍵-1),']'}¨↓CDPAIRS),']'
+   :If I<≢CDATA ⋄ Z,←',' ⋄ :EndIf
+ :EndFor
+ Z,←'};'
+
+⍝ Star names and constellation data
+ Z,←'const SNAMES=[',(1↓∊',',¨{'"',⍵,'"'}¨STARNAMES),'];'
+ Z,←'const SCONST=[',(1↓∊',',¨{'"',⍵,'"'}¨STARCONSTELLATION),'];'
+ Z,←'const CF={'
+ Z,←'And:"Andromeda",Aql:"Aquila",Aqr:"Aquarius",Ara:"Ara",Ari:"Aries",'
+ Z,←'Aur:"Auriga",Boo:"Bootes",Cap:"Capricornus",Car:"Carina",Cas:"Cassiopeia",'
+ Z,←'Cen:"Centaurus",Cep:"Cepheus",Cet:"Cetus",CMa:"Canis Major",CMi:"Canis Minor",'
+ Z,←'Cnc:"Cancer",Col:"Columba",CrB:"Corona Borealis",Cru:"Crux",Crv:"Corvus",'
+ Z,←'CVn:"Canes Venatici",Cyg:"Cygnus",Del:"Delphinus",Dor:"Dorado",Dra:"Draco",'
+ Z,←'Eri:"Eridanus",Gem:"Gemini",Gru:"Grus",Her:"Hercules",Hya:"Hydra",'
+ Z,←'Hyi:"Hydrus",Ind:"Indus",Leo:"Leo",Lep:"Lepus",Lib:"Libra",'
+ Z,←'Lup:"Lupus",Lyr:"Lyra",Mus:"Musca",Oph:"Ophiuchus",Ori:"Orion",'
+ Z,←'Pav:"Pavo",Peg:"Pegasus",Per:"Perseus",Phe:"Phoenix",PsA:"Piscis Austrinus",'
+ Z,←'Psc:"Pisces",Pup:"Puppis",Sco:"Scorpius",Ser:"Serpens",Sgr:"Sagittarius",'
+ Z,←'Tau:"Taurus",TrA:"Triangulum Australe",Tri:"Triangulum",Tuc:"Tucana",'
+ Z,←'UMa:"Ursa Major",UMi:"Ursa Minor",Vel:"Vela",Vir:"Virgo"};'
+
 ⍝ Math helpers
  Z,←'const rad=d=>d*PI/180,deg=r=>r*180/PI;'
  Z,←'const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));'
@@ -350,6 +397,9 @@
  Z,←'const DN=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY"];'
  Z,←'function dayName(jd){return DN[Math.floor(jd+0.5)%7];}'
 
+⍝ Per-star alt/az storage (for tooltip)
+ Z,←'const starAlt=new Float32Array(SRA.length),starAz=new Float32Array(SRA.length);'
+
 ⍝ Compute and render a frame
  Z,←'function renderFrame(fi){'
  Z,←'const jd=JD1+fi*SKIP;'
@@ -375,15 +425,17 @@
  Z,←'for(let i=0;i<nStars;i++){'
  Z,←'const vr=vm(sv[i],combined);'
  Z,←'const alt=deg(Math.asin(clamp(vr[1],-1,1)));'
+ Z,←'starAlt[i]=alt;'
  Z,←'const el=document.getElementById("s"+i);'
- Z,←'if(alt<0){el.setAttribute("visibility","hidden");continue;}'
+ Z,←'if(alt<0){starAz[i]=0;el.setAttribute("visibility","hidden");continue;}'
  Z,←'el.setAttribute("visibility","visible");'
  Z,←'const s=-Math.sign(vr[2]);'
  Z,←'const xy=Math.sqrt(vr[0]*vr[0]+vr[2]*vr[2]);'
  Z,←'let az=0;if(xy>1e-10){const ca=clamp(-vr[0]/xy,-1,1);az=(s<=0?360:0)+s*deg(Math.acos(ca));}'
+ Z,←'starAz[i]=az;'
  Z,←'const pr=Math.tan(rad(90-alt)/2),ar=rad(az);'
- Z,←'el.setAttribute("cx",Math.round(CX+R*(-pr*Math.sin(ar))));'
- Z,←'el.setAttribute("cy",Math.round(CY-R*(pr*Math.cos(ar))));'
+ Z,←'const sx=Math.round(CX+R*(-pr*Math.sin(ar))),sy=Math.round(CY-R*(pr*Math.cos(ar)));'
+ Z,←'el.setAttribute("cx",sx);el.setAttribute("cy",sy);'
  Z,←'}'
 
 ⍝ Bright star labels (follow their stars)
@@ -510,6 +562,75 @@
  Z,←'playBtn.addEventListener("click",togglePlay);'
  Z,←'document.getElementById("spd-dn").addEventListener("click",()=>{const s=[0.25,0.5,1,2,4,8];let i=s.indexOf(speed);if(i>0)setSpeed(s[i-1]);});'
  Z,←'document.getElementById("spd-up").addEventListener("click",()=>{const s=[0.25,0.5,1,2,4,8];let i=s.indexOf(speed);if(i<s.length-1)setSpeed(s[i+1]);});'
+
+⍝ Star info tooltip
+ Z,←'const tt=document.getElementById("tooltip");'
+ Z,←'let ttStar=-1;'
+ Z,←'function fmtRA(h){const hh=Math.floor(h),mm=Math.round((h-hh)*60);return hh+"h "+mm+"m";}'
+ Z,←'function fmtDec(d){const s=d<0?"\u00AF":"";const a=Math.abs(d);return s+Math.round(a)+"\u00B0";}'
+ Z,←'const cp=document.getElementById("const-path");'
+ Z,←'function showConstLines(con){'
+ Z,←'const pairs=CG[con];'
+ Z,←'if(!pairs||!pairs.length){cp.setAttribute("visibility","hidden");return;}'
+ Z,←'let d="";'
+ Z,←'for(let j=0;j<pairs.length;j++){'
+ Z,←'const a=document.getElementById("s"+pairs[j][0]),b=document.getElementById("s"+pairs[j][1]);'
+ Z,←'if(a.getAttribute("visibility")==="hidden"||b.getAttribute("visibility")==="hidden")continue;'
+ Z,←'d+="M"+a.getAttribute("cx")+","+a.getAttribute("cy")+"L"+b.getAttribute("cx")+","+b.getAttribute("cy");}'
+ Z,←'if(d){cp.setAttribute("d",d);cp.setAttribute("visibility","visible");}'
+ Z,←'else{cp.setAttribute("visibility","hidden");}}'
+ Z,←'function showTooltip(i){'
+ Z,←'const el=document.getElementById("s"+i);'
+ Z,←'if(el.getAttribute("visibility")==="hidden"){hideTooltip();return;}'
+ Z,←'ttStar=i;'
+ Z,←'const cx=+el.getAttribute("cx"),cy=+el.getAttribute("cy");'
+ Z,←'let tx=cx+20,ty=cy-130;'
+ Z,←'if(ty<',(FJS PAD),')ty=cy+20;'
+ Z,←'if(tx+340>',(FJS PAD+2160),')tx=cx-360;'
+ Z,←'tt.setAttribute("transform","translate("+tx+","+ty+")");'
+ Z,←'document.getElementById("tt-dot").setAttribute("r",BRIGHT[i]?8:3);'
+ Z,←'document.getElementById("tt-dot").setAttribute("fill",BRIGHT[i]?"#ffd700":"#aaa");'
+ Z,←'document.getElementById("tt-name").textContent=SNAMES[i];'
+ Z,←'document.getElementById("tt-const").textContent=CF[SCONST[i]]||SCONST[i];'
+ Z,←'document.getElementById("tt-radec").textContent="RA "+fmtRA(SRA[i])+"  Dec "+fmtDec(SDEC[i]);'
+ Z,←'document.getElementById("tt-altaz").textContent="Alt "+Math.round(starAlt[i])+"\u00B0  Az "+Math.round(starAz[i])+"\u00B0";'
+ Z,←'tt.setAttribute("visibility","visible");'
+ Z,←'const pairs=CG[SCONST[i]];'
+ Z,←'if(pairs&&pairs.some(p=>p[0]===i||p[1]===i)){showConstLines(SCONST[i]);}'
+ Z,←'else{cp.setAttribute("visibility","hidden");}}'
+ Z,←'function hideTooltip(){tt.setAttribute("visibility","hidden");cp.setAttribute("visibility","hidden");ttStar=-1;}'
+
+⍝ Planet tooltip
+ Z,←'const PNAMES=[',(1↓∊',',¨{'"',⍵,'"'}¨11↑PLANETNAMES),'];'
+ Z,←'function showPlanetTooltip(i,fi){'
+ Z,←'ttStar=-1;'
+ Z,←'const pe=document.getElementById("p"+i);'
+ Z,←'const px=+pe.getAttribute("x"),py=+pe.getAttribute("y");'
+ Z,←'let tx=px+20,ty=py-130;'
+ Z,←'if(ty<',(FJS PAD),')ty=py+20;'
+ Z,←'if(tx+340>',(FJS PAD+2160),')tx=px-360;'
+ Z,←'tt.setAttribute("transform","translate("+tx+","+ty+")");'
+ Z,←'document.getElementById("tt-dot").setAttribute("r",10);'
+ Z,←'document.getElementById("tt-dot").setAttribute("fill","#4fc3f7");'
+ Z,←'document.getElementById("tt-name").textContent=PNAMES[i];'
+ Z,←'document.getElementById("tt-const").textContent="";'
+ Z,←'const rah=PD.rah[i][fi],ram=PD.ram[i][fi],dec=PD.dec[i][fi];'
+ Z,←'document.getElementById("tt-radec").textContent="RA "+rah+"h "+ram+"m  Dec "+hm(dec)+"\u00B0";'
+ Z,←'document.getElementById("tt-altaz").textContent="Alt "+hm(PD.alt[i][fi])+"\u00B0  Az "+hm(PD.az[i][fi])+"\u00B0";'
+ Z,←'tt.setAttribute("visibility","visible");}'
+
+⍝ Hover handlers on star circles
+ Z,←'for(let i=0;i<SRA.length;i++){'
+ Z,←'document.getElementById("s"+i).addEventListener("mouseover",function(){'
+ Z,←'showTooltip(+this.id.slice(1));});'
+ Z,←'document.getElementById("s"+i).addEventListener("mouseout",hideTooltip);}'
+
+⍝ Hover handlers on planet symbols
+ Z,←'for(let i=0;i<PD.px.length;i++){'
+ Z,←'document.getElementById("p"+i).addEventListener("mouseover",(function(idx){'
+ Z,←'return function(){showPlanetTooltip(idx,frame);};})(i));'
+ Z,←'document.getElementById("p"+i).addEventListener("mouseout",hideTooltip);}'
+
 
 ⍝ Start
  Z,←'renderFrame(0);updateUI();'

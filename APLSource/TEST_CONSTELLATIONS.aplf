@@ -1,0 +1,189 @@
+ R←TEST_CONSTELLATIONS;CDATA;SC;I;C;NAME;LINES;NSTARS;NTOTAL;ALLNAMES;J;S1;S2;XBOUND
+⍝ Validate constellation stick figure connectivity data
+⍝ Checks structure, index bounds, no self-loops, constellation membership
+ R←1
+ NSTARS←⊃⍴STARS
+ CDATA←CONSTELLATIONS
+ SC←STARCONSTELLATION
+
+⍝ --- STARCONSTELLATION must have 332 entries ---
+ :If 332≠≢SC
+   ⎕←'FAIL: STARCONSTELLATION count expected 332, got ',⍕≢SC
+   R←0 ⋄ :Return
+ :EndIf
+
+⍝ --- CONSTELLATIONS must be non-empty ---
+ :If 0=≢CDATA
+   ⎕←'FAIL: CONSTELLATIONS is empty'
+   R←0 ⋄ :Return
+ :EndIf
+
+⍝ --- Each element: (name lines) where lines is N×2 matrix ---
+ :For I :In ⍳≢CDATA
+   C←I⊃CDATA
+   :If 2≠≢C
+     ⎕←'FAIL: element ',(⍕I),' is not a 2-element pair'
+     R←0 ⋄ :Return
+   :EndIf
+   NAME LINES←C
+
+⍝ Name must be a non-empty character vector
+   :If 0=≢NAME
+     ⎕←'FAIL: element ',(⍕I),' has empty name'
+     R←0 ⋄ :Return
+   :EndIf
+
+⍝ Lines must be a matrix with 2 columns
+   :If 2≠⍴⍴LINES
+     ⎕←'FAIL: ',NAME,' lines is not a matrix'
+     R←0 ⋄ :Return
+   :EndIf
+   :If 2≠(⍴LINES)[2]
+     ⎕←'FAIL: ',NAME,' lines matrix does not have 2 columns'
+     R←0 ⋄ :Return
+   :EndIf
+
+⍝ All indices must be integers in range 1..NSTARS
+   :If ∨/(,LINES)≠⌊,LINES
+     ⎕←'FAIL: ',NAME,' has non-integer index'
+     R←0 ⋄ :Return
+   :EndIf
+   :If ∨/(,LINES)<1
+     ⎕←'FAIL: ',NAME,' has index < 1'
+     R←0 ⋄ :Return
+   :EndIf
+   :If ∨/(,LINES)>NSTARS
+     ⎕←'FAIL: ',NAME,' has index > ',(⍕NSTARS)
+     R←0 ⋄ :Return
+   :EndIf
+
+⍝ No self-loops
+   :If ∨/LINES[;1]=LINES[;2]
+     ⎕←'FAIL: ',NAME,' has self-loop'
+     R←0 ⋄ :Return
+   :EndIf
+
+⍝ Every star must belong to the named constellation UNLESS it is a
+⍝ documented cross-boundary link. These arise because:
+⍝   - Argo Navis (Car/Vel/Pup) was one constellation until 1763
+⍝   - Elnath (bTau 286) is traditionally shared by Auriga and Taurus
+⍝   - Alpheratz (1) forms a corner of the Great Square of Pegasus
+⍝   - Serpens Caput/Cauda straddle Ophiuchus
+⍝   - Stars 244 (gPer/gPhe) and 205 (dLyr/th1Ser) have wrong Bayer
+⍝     designations in the book — their positions and HR numbers are
+⍝     correct, but STARCONSTELLATION reflects the wrong label.
+⍝ Allowed: (constellation_name star_index) pairs
+ XBOUND←⍬
+ XBOUND,←⊂('Aur' 286)  ⍝ bTau/Elnath in Auriga pentagon
+ XBOUND,←⊂('Car' 322)  ⍝ gVel/Al Suhail — Argo Navis
+ XBOUND,←⊂('Car' 323)  ⍝ dVel — Argo Navis
+ XBOUND,←⊂('Peg' 1)    ⍝ aAnd/Alpheratz — Great Square
+ XBOUND,←⊂('Phe' 244)  ⍝ book labels gPer, actually gPhe (Dec ¯43)
+ XBOUND,←⊂('Pup' 322)  ⍝ gVel/Al Suhail — Argo Navis
+ XBOUND,←⊂('Pup' 40)   ⍝ aCAR/Canopus — Argo Navis
+ XBOUND,←⊂('Ser' 213)  ⍝ etOph/Sabik — Serpens straddles Oph
+ XBOUND,←⊂('Ser' 216)  ⍝ nuOph — Serpens straddles Oph
+ XBOUND,←⊂('Ser' 205)  ⍝ book labels dLyr, actually th1Ser (HR 7141)
+   :For J :In ⍳⊃⍴LINES
+     S1←LINES[J;1] ⋄ S2←LINES[J;2]
+     :If (NAME≢S1⊃SC)∧~(⊂NAME S1)∊XBOUND
+       ⎕←'FAIL: ',NAME,' line ',(⍕J),' star ',(⍕S1),' (',(S1⊃STARNAMES),') belongs to ',S1⊃SC
+       R←0 ⋄ :Return
+     :EndIf
+     :If (NAME≢S2⊃SC)∧~(⊂NAME S2)∊XBOUND
+       ⎕←'FAIL: ',NAME,' line ',(⍕J),' star ',(⍕S2),' (',(S2⊃STARNAMES),') belongs to ',S2⊃SC
+       R←0 ⋄ :Return
+     :EndIf
+   :EndFor
+ :EndFor
+
+⍝ --- No duplicate constellation names ---
+ ALLNAMES←{1⊃⍵}¨CDATA
+ :If (≢ALLNAMES)≠≢∪ALLNAMES
+   ⎕←'FAIL: duplicate constellation names found'
+   R←0 ⋄ :Return
+ :EndIf
+
+⍝ --- Constellation name must appear in STARCONSTELLATION ---
+ :For I :In ⍳≢ALLNAMES
+   :If ~(⊂I⊃ALLNAMES)∊SC
+     ⎕←'FAIL: constellation ',(I⊃ALLNAMES),' not found in STARCONSTELLATION'
+     R←0
+   :EndIf
+ :EndFor
+
+⍝ --- Spot checks: well-known constellations must be present ---
+ :If ~(⊂'Ori')∊ALLNAMES
+   ⎕←'FAIL: Orion missing'
+   R←0
+ :EndIf
+ :If ~(⊂'UMa')∊ALLNAMES
+   ⎕←'FAIL: Ursa Major missing'
+   R←0
+ :EndIf
+ :If ~(⊂'Cas')∊ALLNAMES
+   ⎕←'FAIL: Cassiopeia missing'
+   R←0
+ :EndIf
+ :If ~(⊂'Cyg')∊ALLNAMES
+   ⎕←'FAIL: Cygnus missing'
+   R←0
+ :EndIf
+ :If ~(⊂'Sco')∊ALLNAMES
+   ⎕←'FAIL: Scorpius missing'
+   R←0
+ :EndIf
+ :If ~(⊂'Cru')∊ALLNAMES
+   ⎕←'FAIL: Crux missing'
+   R←0
+ :EndIf
+
+⍝ --- Orion belt: delta-epsilon-zeta (220-221-222) connected ---
+ C←CDATA⊃⍨ALLNAMES⍳⊂'Ori'
+ LINES←2⊃C
+ :If ~(∨/((LINES[;1]=220)∧LINES[;2]=221)∨(LINES[;1]=221)∧LINES[;2]=220)
+   ⎕←'FAIL: Orion missing delta-epsilon belt segment'
+   R←0
+ :EndIf
+ :If ~(∨/((LINES[;1]=221)∧LINES[;2]=222)∨(LINES[;1]=222)∧LINES[;2]=221)
+   ⎕←'FAIL: Orion missing epsilon-zeta belt segment'
+   R←0
+ :EndIf
+
+⍝ --- Big Dipper: Dubhe-Merak (300-301) connected ---
+ C←CDATA⊃⍨ALLNAMES⍳⊂'UMa'
+ LINES←2⊃C
+ :If ~(∨/((LINES[;1]=300)∧LINES[;2]=301)∨(LINES[;1]=301)∧LINES[;2]=300)
+   ⎕←'FAIL: UMa missing Dubhe-Merak segment'
+   R←0
+ :EndIf
+
+⍝ --- Crux: two crossing axes (97-99, 98-100) ---
+ C←CDATA⊃⍨ALLNAMES⍳⊂'Cru'
+ LINES←2⊃C
+ :If ~(∨/((LINES[;1]=97)∧LINES[;2]=99)∨(LINES[;1]=99)∧LINES[;2]=97)
+   ⎕←'FAIL: Crux missing alpha-gamma axis'
+   R←0
+ :EndIf
+ :If ~(∨/((LINES[;1]=98)∧LINES[;2]=100)∨(LINES[;1]=100)∧LINES[;2]=98)
+   ⎕←'FAIL: Crux missing beta-delta axis'
+   R←0
+ :EndIf
+
+⍝ --- Cassiopeia W: chain beta-alpha-gamma-delta-epsilon (51-50-52-53-54) ---
+ C←CDATA⊃⍨ALLNAMES⍳⊂'Cas'
+ LINES←2⊃C
+ :If ~(∨/((LINES[;1]=51)∧LINES[;2]=50)∨(LINES[;1]=50)∧LINES[;2]=51)
+   ⎕←'FAIL: Cas missing Caph-Schedir segment'
+   R←0
+ :EndIf
+ :If ~(∨/((LINES[;1]=52)∧LINES[;2]=53)∨(LINES[;1]=53)∧LINES[;2]=52)
+   ⎕←'FAIL: Cas missing gamma-Ruchbah segment'
+   R←0
+ :EndIf
+
+⍝ --- Summary ---
+ NTOTAL←+/{⊃⍴2⊃⍵}¨CDATA
+ :If R
+   ⎕←'PASS: TEST_CONSTELLATIONS (',(⍕≢CDATA),' constellations, ',(⍕NTOTAL),' line segments)'
+ :EndIf

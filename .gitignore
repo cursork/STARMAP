@@ -1,4 +1,5 @@
 **/.DS_Store
+.earwig
 *.sublime-*
 *.gz
 

@@ -2,17 +2,28 @@
 
 ## Active tasks
 
-- **Animated SVG feature** (branch `animate`)
-  - JS-animated SVG with playback controls (play/pause, scrub, speed 0.25x–8x)
-  - Stars computed in JS (ported sky math), planets pre-computed in APL as JSON
-  - Bright star table: 2-column layout, below-horizon rows dimmed not hidden
-  - Planet table: below-horizon rows dimmed not hidden
-  - Pure SVG controls (no foreignObject — broken with viewBox scaling)
-  - Options: `OPTS←FPS [HIRES [SKIP]]` — frame skip, display size
-  - Web UI: two buttons (Generate SVG / Generate .mp4), checkboxes for large display and every-other-day
-  - 10 years = 1.4MB (skip 1), 743KB (skip 2)
-  - All 9 tests pass
-  - TODO: verify star positions match PLOTSVG output (visual comparison)
+- **Book modernisation** (branch `tmp`, see `plans/PLAN-BOOK.md`)
+  - Phase 1: Typst rendering of existing `starmap.md` content as A5 PDF
+  - First working render complete: body text, code blocks, figures, data tables, full 332-row star table
+  - Remaining phase 1 work:
+    - Add Table 1 (function call hierarchy diagram)
+    - Fix figure numbering (rotation matrices Fig. out of sequence)
+    - Tune page breaks to match original
+    - Side-by-side comparison with original page scans
+  - Phase 2: code audit (diff every listing against APLSource)
+  - Phase 3: apply updated Dyalog v20 code and update invalidated prose
+- **Web UI + tooltips** (branch `animated-svg`)
+  - Hover tooltips on stars/planets: name, constellation, RA/Dec, alt/az
+  - Constellation lines appear on hover (only for stars in stick figure)
+  - Constellation data rebuilt from Stellarium modern_iau (was dcf21)
+  - Hit box fix: transparent stroke-width:16 + pointer-events:all
+  - Remaining:
+    - Server needs restart to test rebuilt constellation data
+    - Star catalog errata (bugs 18-20 in docs/calculation-fixes.md):
+      - Star 205: labeled δ Lyr but is θ¹ Ser (HR 7141, Dec +4° is correct; Bayer designation is wrong)
+      - Star 244: labeled γ Per but is γ Phe (typo PER→PHE)
+      - Star 320: labeled ζ UMi, HR 5909, but position (Dec 17°) and magnitude (6.36) wrong (real ζ UMi is Dec +78°, mag 4.3)
+    - Fix STARCONSTELLATION for stars 205 and 244
 - Continue proofreading transcribed book text
 - Clean up debug scripts (`debug_skypos*.py`, `debug_final.py`) from sky position investigation
 
@@ -69,6 +80,38 @@ None currently.
 ---
 
 ## Session log
+
+### 2026-03-22 (book modernisation — Typst setup)
+- Created `plans/PLAN-BOOK.md` — plan for re-rendering the book with updated code
+- Goal: same book, new Dyalog v20 code, A5 PDF via Typst, faithful to original layout
+- Principle: render existing content first, then update code
+- Created `book/typst/` project structure:
+  - `template.typ` — A5 page layout, Courier body, APL385 code, underlined headings, justified text
+  - `starmap.typ` — full document converted from `starmap.md` to Typst markup
+  - `star-table.txt` — extracted 332-row star catalog for inclusion
+- Template features:
+  - `#apl-block` wrapper for APL code (APL385 Unicode font)
+  - `#data-table` wrapper for orbital element tables (Courier 5pt)
+  - `#param` helper for parameter definitions (hanging indent)
+  - `#indent` helper for paragraph breaks
+  - Figures with sans-serif italic captions, inline placement
+  - Two-column grid layout for selector function pairs
+- First render: ~38 pages, all body text, code blocks, 10 figures, all data tables, full star catalog
+- Data table font fix: global `show raw` rule handles layout only; `apl-block` and `data-table` set fonts via scoped `#set text` to avoid conflicts
+- Known issues remaining: Table 1 missing, figure numbering out of sequence, page breaks untuned
+
+### 2026-03-18 (hover tooltips + constellation lines)
+- Reworked star/planet tooltips from click to hover (mouseover/mouseout)
+- Removed invisible hit circles (sh*/ph*), added transparent stroke for hover targets
+- Added constellation stick figure display on hover (single `<path>` behind stars)
+- Only shows lines when hovered star is in the stick figure (not just in the constellation region)
+- Rebuilt CONSTELLATIONS.aplf from IAU reference data (dcf21/constellation-stick-figures)
+  - Matched HIP numbers → RA/Dec via VizieR → nearest star in our 332-star catalog
+  - 50 constellations (was 51 hand-crafted), cross-constellation links preserved (Aur/Tau, Car/Vel, Pup/Car)
+  - Removed hand-crafted errors (Draco head used wrong star, Aquila had crossing lines)
+- Replaced CL flat array with CG grouped object in JS (constellation abbreviation → pairs)
+- Found STARS catalog errors: dLyr(205) Dec=4.2° (should ~37°), zUMi(320) Dec=17.4° (should ~78°)
+- Verification script: scripts/verify_constellations.py generates per-constellation plots
 
 ### 2026-03-17 session 2 (animated SVG polish + web UI)
 - Bright star table: 2-column layout (11 rows each), below-horizon rows dimmed (#555) not hidden

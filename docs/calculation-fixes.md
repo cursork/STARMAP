@@ -57,6 +57,9 @@ Every function in this chain has been checked. Bugs were found at six stages: JN
 | 15 | PRECESS.aplf | 6 | Sign error | Critical | [PRECESS sign](#15-precess-precession-direction) |
 | 16 | MOONPOS.aplf | 4 | Sign error | Critical | [MOONPOS tilt sign](#16-moonpos-ecliptic-tilt-sign) |
 | 17 | moon.aplf | 5 | Decimal point | Critical | [Moon secular rates](#17-moon-secular-drift-rates) |
+| 18 | starmap.md | 925 | Wrong Bayer designation | Minor | [Star 205 identity](#18-star-205-wrong-bayer-designation-δ-lyr--θ¹-ser) |
+| 19 | starmap.md | 964 | Wrong constellation | Minor | [Star 244 identity](#19-star-244-wrong-constellation-γ-per--γ-phe) |
+| 20 | starmap.md | 1040 | Wrong coordinates | Minor | [Star 320 coordinates](#20-star-320-wrong-coordinates-ζ-umi) |
 
 Severity levels:
 - **Critical**: produces systematically wrong sky positions
@@ -544,6 +547,59 @@ The program expects the user to enter **UTC (Greenwich civil time)**, not local 
 For the EXAMPLE_RENDER test case (Anaheim, 10 PM PDT, 15 May 1974):
 - PDT = UTC − 7, so 10 PM PDT = 05:00 UTC on 16 May
 - Enter: date = 5 16 1974, time = 5
+
+---
+
+## Star catalog errata
+
+These are errors in the star table (book appendix, pp. 693+) that do not affect calculations but cause incorrect star identification or constellation assignment.
+
+### 18. Star 205: wrong Bayer designation (δ Lyr → θ¹ Ser)
+
+**Row:** 205, labeled "δ LYR", HR 7141
+**Type:** Wrong Bayer designation and constellation assignment
+**Status:** Identified, not yet fixed
+
+The book lists star 205 as δ Lyrae (HR 7141) with coordinates RA 18h 56m 13s, Dec +4° 12', mag 4.62. Cross-referencing via VizieR:
+
+- IV/27A: HR 7141 = HIP 92946 = HD 175638
+- Hipparcos: HIP 92946 at RA 18h 56m 13.2s, Dec +4° 12' 00.5"
+
+The coordinates and HR number are internally consistent — they identify the same star. But that star is **θ¹ Serpentis Caudae**, not δ Lyrae. The real δ² Lyrae (HR 7139) is at RA 18h 54m 30s, Dec +36° 54', about 33° away.
+
+The book's coordinates and HR number are correct for the actual star; only the Bayer designation "δ LYR" is wrong. STARCONSTELLATION assigns it to 'Lyr' based on the wrong label.
+
+Previous diagnosis (TODO.md) incorrectly stated "Dec 4.2° should be ~37°" — this was based on the assumption that the star really was δ Lyr.
+
+### 19. Star 244: wrong constellation (γ Per → γ Phe)
+
+**Row:** 244, labeled "γ PER", HR 429
+**Type:** Wrong constellation abbreviation
+**Status:** Identified, not yet fixed
+
+The book lists star 244 as γ PER (HR 429) at RA 1h 28m 22s, Dec -43° 19', mag 3.41. However:
+
+- Dec -43° places this star deep in the southern sky, far from Perseus (Dec +40° to +59°)
+- The position matches γ Phoenicis (RA 1h 28m 22s, Dec -43° 19')
+- The star appears between α Phe (242) and β Phe (243) in the table, and before the Pleiades (245-249)
+
+The constellation abbreviation "PER" is a typo for "PHE". The coordinates and HR number are correct. STARCONSTELLATION assigns it to 'Per' based on the wrong label.
+
+### 20. Star 320: wrong coordinates (ζ UMi)
+
+**Row:** 320, labeled "ζ UMI", HR 5909
+**Type:** Wrong RA and Dec
+**Status:** Identified, not yet fixed
+
+The book lists star 320 as ζ UMi (HR 5909) with RA 15h 52m 56s, Dec +17° 24', mag 6.36. Cross-referencing:
+
+- IV/27A: HR 5909 = HIP 77055
+- Hipparcos: HIP 77055 at RA 15h 44m 03.5s, Dec +77° 47' 40"
+- ζ UMi has V magnitude 4.32, not 6.36
+
+The book's position (Dec +17°) and magnitude (6.36) do not match the actual ζ UMi (Dec +78°, mag 4.3). The RA is also wrong (15h 53m vs 15h 44m). Either the coordinates belong to a different star entirely, or both position and magnitude were garbled during transcription.
+
+The Stellarium modern_iau data correctly uses HIP 77055 (the real ζ UMi) in the UMi stick figure. The HR→HIP override in `rebuild_constellations.py` maps HR 5909 to HIP 77055, so the constellation line draws to the correct position. However, the plotted star position in our STARS catalog is 60° away from the real ζ UMi.
 
 ---
 
