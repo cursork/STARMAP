@@ -24,6 +24,7 @@
       - Star 244: labeled γ Per but is γ Phe (typo PER→PHE)
       - Star 320: labeled ζ UMi, HR 5909, but position (Dec 17°) and magnitude (6.36) wrong (real ζ UMi is Dec +78°, mag 4.3)
     - Fix STARCONSTELLATION for stars 205 and 244
+    - Constellation completeness: current stick figures (Stellarium modern_iau) are incomplete because they use stars outside our 332-star catalog. Need stick figures designed for our specific star set — the book's 332 stars were chosen to support constellation outlines, so a matched source should give near-complete figures for many constellations
 - Continue proofreading transcribed book text
 - Clean up debug scripts (`debug_skypos*.py`, `debug_final.py`) from sky position investigation
 
@@ -80,6 +81,26 @@ None currently.
 ---
 
 ## Session log
+
+### 2026-03-23 (constellation data rebuild)
+- Switched constellation source from dcf21 to Stellarium modern_iau (CC BY-SA 4.0)
+- Rewrote `scripts/rebuild_constellations.py`: deterministic HR→HIP matching via VizieR IV/27A (was angular distance guessing)
+- Added 3 known HR→HIP overrides for stars missing from IV/27A: Castor (HR 2890), ε Boo (HR 5506), ζ UMi (HR 5909)
+- Fixed TEST_CONSTELLATIONS: added XBOUND exception list for cross-boundary links, fixed `∊` operator bug (needed `⊂`)
+- All 8 tests pass
+- Discovered 3 new star catalog errata (bugs 18-20 in docs/calculation-fixes.md):
+  - Star 205: book says δ Lyr (HR 7141) but HR 7141 = θ¹ Ser at Dec +4° (not δ Lyr at Dec +37°). Coordinates correct, Bayer designation wrong.
+  - Star 244: book says γ Per but position (Dec -43°) is γ Phe. Typo PER→PHE.
+  - Star 320: book says ζ UMi (HR 5909) at Dec +17°, mag 6.36. Real ζ UMi is Dec +78°, mag 4.3. Position garbled.
+- Coverage analysis: our 332-star catalog covers only 36% of Stellarium's 843 segments (310/745 HIP IDs matched)
+  - 50 constellations have at least one segment, but most are incomplete
+  - Only 4 constellations at 100% with Stellarium (Cas, CMi, Tri, UMi); 6 with dcf21 simplified (adds Car, Leo)
+  - Root cause: external stick figure sources use many fainter stars not in our catalog
+- Tried filtering to only complete Ptolemaic constellations — too aggressive (6 constellations)
+- Reverted to full 50-constellation Stellarium data (no wrong lines, just incomplete figures)
+- Open question: the book's 332 stars were chosen to "complete the outline of certain constellations" — we need stick figures designed for our catalog, not generic modern ones
+- Created comparison tools: `scripts/compare_constellations.py` (HTML page with In-The-Sky.org reference images), `scripts/verify_constellations.py` (4-page SVG plots)
+- Downloaded reference data: `scripts/stellarium_modern_iau.json`, `scripts/dcf21_simplified.dat`, `scripts/dcf21_iau.dat`
 
 ### 2026-03-22 (book modernisation — Typst setup)
 - Created `plans/PLAN-BOOK.md` — plan for re-rendering the book with updated code
