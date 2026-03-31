@@ -62,7 +62,7 @@
           ⎕←'Converting to video...'
           VID←FPS ns.MAKEVIDEO DIR
           :If 0<≢VID
-              result←(url: '/api/video/',ID,'/animation.mp4')
+              result←(url: 'api/video/',ID,'/animation.mp4')
           :Else
               req.Fail 500
               result←(error: 'Video generation failed')
@@ -109,7 +109,7 @@
           ID←(∊⊃⎕SHELL 'date +%Y%m%d%H%M%S')~⎕UCS 10 13 32
           FN←root,'/output/',ID,'.svg'
           (⊂SVG)⎕NPUT FN 1
-          result←(url: '/api/svg/',ID)
+          result←(url: 'api/svg/',ID)
       :Else
           req.Fail 400
           result←(error: ⎕DMX.Message)

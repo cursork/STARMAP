@@ -27,7 +27,6 @@
   .check-row input[type="checkbox"] { accent-color: #4fc3f7; }
   #status { margin: 1rem 0; color: #888; min-height: 1.5rem; }
   #status.error { color: #f44; }
-  video { max-width: 100%; background: #000; margin-top: 1rem; display: none; }
   .help { font-size: 0.75rem; color: #555; margin-top: 0.2rem; }
 </style>
 </head>
@@ -70,14 +69,12 @@
   <div class="field full">
     <div class="row">
       <button id="genSvg" onclick="generateSVG()">Generate SVG</button>
-      <button id="genMp4" onclick="generateMp4()">Generate .mp4 (slow)</button>
     </div>
   </div>
 </div>
 
 <div id="status"></div>
 <iframe id="svg-player" style="display:none;border:none;background:#0a0a1a;"></iframe>
-<video id="player" controls></video>
 
 <script>
 function parseDate(s) {
@@ -98,14 +95,11 @@ function getParams() {
 
 function setButtons(disabled) {
   document.getElementById('genSvg').disabled = disabled;
-  document.getElementById('genMp4').disabled = disabled;
 }
 
 async function generateSVG() {
   const status = document.getElementById('status');
-  const player = document.getElementById('player');
   const svgPlayer = document.getElementById('svg-player');
-  player.style.display = 'none';
   svgPlayer.style.display = 'none';
   setButtons(true);
   status.className = '';
@@ -116,7 +110,7 @@ async function generateSVG() {
   body.skip = document.getElementById('skip').checked ? 2 : 1;
 
   try {
-    const resp = await fetch('/api/generate-svg', {
+    const resp = await fetch('api/generate-svg', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -150,40 +144,6 @@ async function generateSVG() {
   setButtons(false);
 }
 
-async function generateMp4() {
-  const status = document.getElementById('status');
-  const player = document.getElementById('player');
-  const svgPlayer = document.getElementById('svg-player');
-  player.style.display = 'none';
-  svgPlayer.style.display = 'none';
-  setButtons(true);
-  status.className = '';
-  status.textContent = 'Generating mp4... this may take a while.';
-
-  const body = getParams();
-
-  try {
-    const resp = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const result = await resp.json();
-    if (resp.ok && result.url) {
-      status.textContent = 'Done.';
-      player.src = result.url;
-      player.style.display = 'block';
-      player.load();
-    } else {
-      status.className = 'error';
-      status.textContent = 'Error: ' + (result.error || 'Unknown error');
-    }
-  } catch (e) {
-    status.className = 'error';
-    status.textContent = 'Request failed: ' + e.message;
-  }
-  setButtons(false);
-}
 </script>
 
 </body>
