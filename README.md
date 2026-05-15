@@ -1,6 +1,23 @@
 STARMAP
 =======
 
+## An aside regarding this repository
+
+This is based on [Stephen Taylor's scan of the STARMAP book](https://github.com/5jt/STARMAP).
+I intend to create a PR there, once I have updated this documentation and checked
+for any stray files that might have found their way committed to GitHub.
+
+Work done:
+
+* Make it work with Dyalog APL
+* Add tests based on JPL data
+* Fix some issues such as transcription ones
+* Create a simple web UI - hosted at https://starmap.kirsopp.me
+  - [Sample .svg created](animated.svg) (very small - download and open in a browser)
+  - [Sample .mp4 of the web UI](starmap-animation-demo.mp4) (large - but should work everywhere)
+
+## Back to the original README...
+
 ![Sample output of program to plot heliocentric coordinates](book/extracted-figures/figure-05.png)
 
 This is a project to recreate STARMAP, a classic example of Expository Programming:
